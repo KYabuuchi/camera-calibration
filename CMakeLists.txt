@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 # project name
-project(camera_calibration)
+project(camera-calibration)
 
 find_package(OpenCV REQUIRED)
 
@@ -40,20 +40,30 @@ set(CMAKE_CXX_FLAGS
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-old-style-cast -Wno-pragmas")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
 
+# If toplevel
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR)
+    set(TOPLEVEL True)
+endif()
 
 # Declare the executable target built from your sources
 # Link your application with OpenCV libraries
-include_directories(${CMAKE_CURRENT_LIST_DIR})
-add_executable(sample test/main.cpp calibration/calibration.cpp)
-target_link_libraries(sample ${OpenCV_LIBS})
-
+if(TOPLEVEL)
+    include_directories(${CMAKE_CURRENT_LIST_DIR})
+    add_executable(sample test/main.cpp calibration/calibration.cpp)
+    target_link_libraries(sample ${OpenCV_LIBS})
+    message(STATUS "'YOU CAN BUILD SAMPLE'")
 
 # Clean
-add_custom_target(cmake-clean
-    COMMAND rm -rf `find ${CMAKE_BINARY_DIR} -name \"*[cC][mM]ake*\" -and -not -name \"CMakeLists.txt\"`
-    COMMAND rm -rf `find ${CMAKE_BINARY_DIR} -name \"Makefile\"`)
+    add_custom_target(cmake-clean
+        COMMAND rm -rf `find ${CMAKE_BINARY_DIR} -name \"*[cC][mM]ake*\" -and -not -name \"CMakeLists.txt\"`
+        COMMAND rm -rf `find ${CMAKE_BINARY_DIR} -name \"Makefile\"`)
 
-add_custom_target(full-clean
-    COMMAND make clean
-    COMMAND make cmake-clean)
-
+    add_custom_target(full-clean
+        COMMAND make clean
+        COMMAND make cmake-clean)
+else()
+    # can use as Library
+    include_directories(include)
+    file(GLOB_RECURSE CAMERA_CALIBRATION_SOURCES  src/*.cpp)
+    add_library(camera-calibration STATIC ${CAMERA_CALIBRATION_SOURCES})
+endif()
