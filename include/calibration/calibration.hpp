@@ -11,7 +11,7 @@ constexpr int IMAGE_NUM_MAX = 25;  // 画像数
 constexpr int PAT_ROW = 7;         // パターンの行数
 constexpr int PAT_COL = 10;        // パターンの列数
 constexpr int PAT_SIZE = PAT_ROW * PAT_COL;
-constexpr float CHESS_SIZE = 24.0f;  // パターン1マスの1辺サイズ[mm]
+constexpr float CHESS_SIZE = 19.5f;  // パターン1マスの1辺サイズ[mm]
 
 struct CameraParameters {
     // 内部パラメータ
