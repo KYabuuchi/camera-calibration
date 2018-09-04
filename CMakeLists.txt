@@ -9,9 +9,7 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR)
     set(TOPLEVEL True)
 endif()
 
-# Declare the executable target built from your sources
-# Link your application with OpenCV libraries
-if(!TOPLEVEL)
+if(NOT TOPLEVEL)
     # can use as Library
     include_directories(include)
     file(GLOB_RECURSE CAMERA_CALIBRATION_SOURCES  src/*.cpp)

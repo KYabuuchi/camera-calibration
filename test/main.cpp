@@ -1,32 +1,48 @@
 #include "calibration/calibration.hpp"
 #include <iostream>
 
-int main(int argc, char* argv[])
+int main(/*int argc, char* argv[]*/)
 {
-    if (argc == 1) {
-        std::cout << "Please Set some arguments\n"
-                  << "arg1:mode, arg2:input_dir, arg3:output_dir,arg4:device\n"
-                  << "for example './calibrate 2 hoge.xml ../ref/pseye.xml /dev/video0'\n"
-                  << "0: stream video & calibrate & output as XML & show collected video\n"
-                  << "1: calibrate & output as XML\n"
-                  << "2: read XML & show collected video\n"
-                  << "other: not supoorted \n"
-                  << std::endl;
-        return -1;
-    }
+    Calibration::CameraCalibration camera;
 
-    int mode = std::atoi(argv[1]);
-    CameraCalibration camera(argv[2], argv[3], argv[4]);
+    int mode = 0;
+    std::string images_dir, xml_dir, device_dir;
 
-    if (mode == 0) {
-        camera.calcParameterWithPhoto();
-    } else if (mode == 1) {
-        camera.calcParameter();
-    } else if (mode == 2) {
-        camera.adaptParameter();
-    } else {
-        std::cerr << "not supported." << std::endl;
-        return -1;
+    while (1) {
+        std::cout << "\n You can chose some options:\n"
+                  << "0: quit\n"
+                  << "1: photo -> calc parameters -> output to XML\n"
+                  << "2: calc parameters from pictures -> output to XML\n"
+                  << "3: open XML -> rectify video\n"
+                  << " Press number of mode" << std::endl;
+
+        std::cin >> mode;
+
+        switch (mode) {
+        case 0:
+            std::cout << "quit." << std::endl;
+            return 0;
+            break;
+        case 1:
+            std::cout << "input 'images_dir', 'xml_dir.xml', 'device_dir'" << std::endl;
+            std::cin >> images_dir >> xml_dir >> device_dir;
+            camera.calcParametersWithPhoto(images_dir, xml_dir, device_dir);
+            break;
+        case 2:
+            std::cout << "input 'images_dir', 'xml_dir.xml'" << std::endl;
+            std::cin >> images_dir >> device_dir;
+            camera.calcParameters(images_dir, xml_dir);
+            break;
+        case 3:
+            std::cout << "input 'xml_dir.xml', 'device_dir'" << std::endl;
+            std::cin >> xml_dir >> device_dir;
+            camera.adaptParameters(xml_dir, device_dir);
+            break;
+        default:
+            std::cerr << mode << "is not supported." << std::endl;
+            return -1;
+            break;
+        }
     }
 
     return 0;

@@ -1,24 +1,28 @@
 #include "calibration/calibration.hpp"
 
-int CameraCalibration::adaptParameter()
+namespace Calibration
+{
+int CameraCalibration::adaptParameters(std::string xml_dir, std::string device_dir)
 {
     // (0)初期化
     init();
 
     // (1)XMLファイルの読み込み
-    readXML();
+    readXML(xml_dir);
 
     // (2)歪補正
-    compareCorrection();
+    compareCorrection(device_dir);
+
+    return 0;
 }
 
-int CameraCalibration::calcParameter()
+int CameraCalibration::calcParameters(std::string images_dir, std::string xml_dir)
 {
     // (0)データ初期化
     init();
 
     // (1)キャリブレーション画像の読み込み
-    readImage();
+    readImage(images_dir);
 
     // (2)キャリブレーションパターンのコーナー検出
     // (3)コーナー位置をサブピクセル精度に修正，描画
@@ -27,7 +31,7 @@ int CameraCalibration::calcParameter()
     int tmp_image_num = valid_image_num;
 
     for (int i = 0; i < tmp_image_num; i++) {
-        foundCorners(src_img.at(i), window_name);
+        foundCorners(src_imgs.at(i), window_name);
     }
     cv::destroyWindow(window_name);
 
@@ -37,24 +41,24 @@ int CameraCalibration::calcParameter()
 
         for (int j = 0; j < PAT_ROW; j++) {
             for (int k = 0; k < PAT_COL; k++) {
-                objects_tmp.push_back(cv::Point3f(j * CHESS_SIZE, k * CHESS_SIZE, 0.0f));
+                objects_tmp.push_back(cv::Point3f(static_cast<float>(j) * CHESS_SIZE, static_cast<float>(k) * CHESS_SIZE, 0.0f));
             }
         }
         object_points.push_back(objects_tmp);
     }
 
     // (5)内部パラメータ，外部パラメータ，歪み係数の推定
-    calcCalibration();
+    calibrate();
 
     // (6)XMLファイルへの書き出し
-    outputXML();
+    outputXML(xml_dir);
 
-    std::cout << "\n[parameter estimation is done]" << std::endl;
+    std::cout << "\n[parameters estimation is done]" << std::endl;
 
     return 0;
 }
 
-int CameraCalibration::calcParameterWithPhoto()
+int CameraCalibration::calcParametersWithPhoto(std::string images_dir, std::string xml_dir, std::string device_dir)
 {
     // (0)データ初期化
     init();
@@ -62,27 +66,27 @@ int CameraCalibration::calcParameterWithPhoto()
     // (1)キャリブレーション画像の撮影
     // (2)キャリブレーションパターンのコーナー検出
     // (3)コーナー位置をサブピクセル精度に修正，描画
-    cv::VideoCapture video(device);
+    cv::VideoCapture video(device_dir);
     std::string window_name = "Calibration";
     cv::namedWindow(window_name, CV_WINDOW_AUTOSIZE);
 
     valid_image_num = IMAGE_NUM_MAX;
     for (int i = 0; i < valid_image_num;) {
-        std::cout << "PRESS KEY if a camera gazes tha pattern "
+        std::cout << "PRESS KEY when the camera gazes tha pattern. "
                   << (valid_image_num - i) << " left" << std::endl;
 
         cv::Mat src;
         while (cv::waitKey(10) == -1) {
             video >> src;
             std::stringstream ss;
-            ss << "calib_img" << std::setw(2) << std::setfill('0') << i << ".png";
+            ss << images_dir + "/calib_img" << std::setw(2) << std::setfill('0') << i << ".png";
             cv::imwrite(ss.str(), src);
             cv::imshow(window_name, src);
         }
 
         if (foundCorners(src, window_name)) {
             i++;
-            src_img.push_back(src);
+            src_imgs.push_back(src);
         } else {
             std::cout << "NOT found the pattern completely" << std::endl;
         }
@@ -97,7 +101,7 @@ int CameraCalibration::calcParameterWithPhoto()
 
         for (int j = 0; j < PAT_ROW; j++) {
             for (int k = 0; k < PAT_COL; k++) {
-                objects_tmp.push_back(cv::Point3f(j * CHESS_SIZE, k * CHESS_SIZE, 0.0f));
+                objects_tmp.push_back(cv::Point3f(static_cast<float>(j) * CHESS_SIZE, static_cast<float>(k) * CHESS_SIZE, 0.0f));
             }
         }
         object_points.push_back(objects_tmp);
@@ -105,31 +109,32 @@ int CameraCalibration::calcParameterWithPhoto()
 
 
     // (5)内部パラメータ，外部パラメータ，歪み係数の推定
-    calcCalibration();
+    calibrate();
 
     // (6)XMLファイルへの書き出し
-    outputXML();
+    outputXML(xml_dir);
 
     // (7)歪補正
-    compareCorrection();
+    compareCorrection(device_dir);
 
-    std::cout << "[parameter estimation is done]" << std::endl;
+    std::cout << "[parameters estimation is done]" << std::endl;
 
     return 0;
 }
 
-void CameraCalibration::calcCalibration()
+void CameraCalibration::calibrate()
 {
     std::cout << "[calibration start]" << std::endl;
-    double rms = cv::calibrateCamera(
+    params.RMS = cv::calibrateCamera(
         object_points,
         corners,
-        src_img.at(0).size(),
-        intrinsic,
-        distortion,
-        rotation,
-        translation);
-    std::cout << "RMS of error : " << rms << std::endl;
+        src_imgs.at(0).size(),
+        params.intrinsic,
+        params.distortion,
+        params.rotation,
+        params.translation);
+
+    showParameters();
 }
 
 bool CameraCalibration::foundCorners(cv::Mat img, std::string window_name)
@@ -164,52 +169,62 @@ bool CameraCalibration::foundCorners(cv::Mat img, std::string window_name)
     return true;
 }
 
-void CameraCalibration::readImage()
+void CameraCalibration::readImage(std::string images_dir)
 {
-    std::cout << "[reading stored images]" << std::endl;
+    std::cout << "[ reading stored images at " << images_dir << " ]" << std::endl;
 
-    src_img.clear();
+    src_imgs.clear();
 
     int image_num = 0;
     for (int i = 0; i < IMAGE_NUM_MAX; i++) {
         std::stringstream ss;
-        ss << input_dir << "/calib_img" << std::setw(2) << std::setfill('0') << i << ".png";
+        ss << images_dir << "/calib_img" << std::setw(2) << std::setfill('0') << i << ".png";
         cv::Mat tmp_img = cv::imread(ss.str(), CV_LOAD_IMAGE_COLOR);
         if (tmp_img.data == NULL) {
-            std::cerr << "cannot read : " << ss.str() << std::endl;
+            std::cerr << "cannot open : " << ss.str() << std::endl;
         } else {
-            src_img.push_back(tmp_img);
+            std::cerr << "have opened: " << ss.str() << std::endl;
+            src_imgs.push_back(tmp_img);
             image_num++;
         }
     }
     valid_image_num = image_num;
-    std::cout << "[found " << valid_image_num << " images]" << std::endl;
+    std::cout << "[ found " << valid_image_num << " images ]" << std::endl;
 }
 
-void CameraCalibration::readXML()
+bool CameraCalibration::readXML(std::string xml_dir)
 {
-    std::cout << "read " << output_dir << std::endl;
-    cv::FileStorage fs(output_dir, cv::FileStorage::READ);
+    std::cout << "[ open " << xml_dir << " ] " << std::endl;
+    cv::FileStorage fs(xml_dir, cv::FileStorage::READ);
 
-    fs["intrinsic"] >> intrinsic;
-    fs["distortion"] >> distortion;
-    fs["rotation"] >> rotation;
-    fs["translation"] >> translation;
+    if (not fs.isOpened()) {
+        std::cout << "can not open " << xml_dir << std::endl;
+        return false;
+    }
+    fs["intrinsic"] >> params.intrinsic;
+    fs["distortion"] >> params.distortion;
+    fs["rotation"] >> params.rotation;
+    fs["translation"] >> params.translation;
+    fs["RMS"] >> params.RMS;
+
+    showParameters();
     fs.release();
+
+    return true;
 }
 
-void CameraCalibration::compareCorrection()
+void CameraCalibration::compareCorrection(std::string device_dir)
 {
     std::cout << "[compare corrected image]" << std::endl;
-    cv::VideoCapture video(device);
+    cv::VideoCapture video(device_dir);
     std::string show_window_name = "show image";
     cv::namedWindow(show_window_name, CV_WINDOW_AUTOSIZE);
-    std::cout << intrinsic << std::endl;
+    std::cout << params.intrinsic << std::endl;
 
     while (cv::waitKey(10) == -1) {
         cv::Mat src, dst, merge;
         video.read(src);
-        cv::undistort(src, dst, intrinsic, distortion);
+        cv::undistort(src, dst, params.intrinsic, params.distortion);
         cv::putText(src, "src", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 200), 2, CV_AA);
         cv::putText(dst, "dst", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 200), 2, CV_AA);
         cv::hconcat(src, dst, merge);
@@ -218,21 +233,44 @@ void CameraCalibration::compareCorrection()
     cv::destroyWindow(show_window_name);
 }
 
-void CameraCalibration::outputXML()
+void CameraCalibration::outputXML(std::string xml_dir)
 {
-    cv::FileStorage fs(output_dir, cv::FileStorage::WRITE);
-    cv::write(fs, "intrinsic", intrinsic);
-    cv::write(fs, "distortion", distortion);
-    cv::write(fs, "rotation", rotation);
-    cv::write(fs, "translation", translation);
+    cv::FileStorage fs(xml_dir, cv::FileStorage::WRITE);
+    cv::write(fs, "intrinsic", params.intrinsic);
+    cv::write(fs, "distortion", params.distortion);
+    cv::write(fs, "rotation", params.rotation);
+    cv::write(fs, "translation", params.translation);
+    cv::write(fs, "RMS", params.RMS);
     fs.release();
-    std::cout << "['" << output_dir << "' has outputed]" << std::endl;
+    std::cout << "['" << xml_dir << "' has outputed]" << std::endl;
 }
 
 void CameraCalibration::init()
 {
-    src_img.clear();
+    src_imgs.clear();
     corners.clear();
     object_points.clear();
     std::cout << "[initialize done]" << std::endl;
 }
+
+CameraParameters CameraCalibration::readParameters(std::string xml_dir)
+{
+    if (readXML(xml_dir)) {
+        showParameters();
+        return params;
+    } else {
+        std::cout << "return initial struct" << std::endl;
+        return CameraParameters();
+    }
+}
+void CameraCalibration::showParameters()
+{
+    std::cout
+        << "\n[intrinsic] " << params.intrinsic
+        << "\n[distortion] " << params.distortion
+        << "\n[rotation] " << params.rotation
+        << "\n[translation] " << params.translation
+        << "\n[RMS] " << params.RMS << std::endl;
+}
+
+}  // namespace Calibration
