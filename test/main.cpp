@@ -14,6 +14,7 @@ int main(/*int argc, char* argv[]*/)
                   << "1: photo -> calc parameters -> output to XML\n"
                   << "2: calc parameters from pictures -> output to XML\n"
                   << "3: open XML -> rectify video\n"
+                  << "4: open XML -> show parameters\n"
                   << " Press number of mode" << std::endl;
 
         std::cin >> mode;
@@ -37,6 +38,11 @@ int main(/*int argc, char* argv[]*/)
             std::cout << "input 'xml_dir.xml', 'device_dir'" << std::endl;
             std::cin >> xml_dir >> device_dir;
             camera.adaptParameters(xml_dir, device_dir);
+            break;
+        case 4:
+            std::cout << "input 'xml_dir.xml'" << std::endl;
+            std::cin >> xml_dir;
+            camera.readParameters(xml_dir);
             break;
         default:
             std::cerr << mode << "is not supported." << std::endl;
