@@ -9,7 +9,7 @@ int main(/*int argc, char* argv[]*/)
     std::string images_dir, xml_dir, device_dir;
 
     while (1) {
-        std::cout << "\n You can chose some options:\n"
+        std::cout << "\n"
                   << "0: quit\n"
                   << "1: photo -> calc parameters -> output to XML\n"
                   << "2: calc parameters from pictures -> output to XML\n"
