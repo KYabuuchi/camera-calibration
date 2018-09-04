@@ -31,9 +31,7 @@ class CameraCalibration
     using vv_point3f = std::vector<std::vector<cv::Point3f>>;
 
 public:
-    CameraCalibration()
-    {
-    }
+    CameraCalibration() = default;
 
     // ディレクトリ内にある画像を利用し，パラメータを推定して，XMLへ出力する．
     int calcParameters(std::string images_dir, std::string xml_dir);
