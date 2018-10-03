@@ -27,7 +27,7 @@ int CameraCalibration::calcParameters(std::string images_dir, std::string xml_di
     // (2)キャリブレーションパターンのコーナー検出
     // (3)コーナー位置をサブピクセル精度に修正，描画
     std::string window_name = "Calibration";
-    cv::namedWindow(window_name, CV_WINDOW_AUTOSIZE);
+    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     int tmp_image_num = valid_image_num;
 
     for (int i = 0; i < tmp_image_num; i++) {
@@ -68,7 +68,7 @@ int CameraCalibration::calcParametersWithPhoto(std::string images_dir, std::stri
     // (3)コーナー位置をサブピクセル精度に修正，描画
     cv::VideoCapture video(device_dir);
     std::string window_name = "Calibration";
-    cv::namedWindow(window_name, CV_WINDOW_AUTOSIZE);
+    cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
 
     valid_image_num = IMAGE_NUM_MAX;
     for (int i = 0; i < valid_image_num;) {
@@ -151,14 +151,14 @@ bool CameraCalibration::foundCorners(cv::Mat img, std::string window_name)
     }
 
     cv::Mat src_gray = cv::Mat(img.size(), CV_8UC1, 1);
-    cv::cvtColor(img, src_gray, CV_BGR2GRAY);
+    cv::cvtColor(img, src_gray, cv::COLOR_BGR2GRAY);
 
     cv::cornerSubPix(
         src_gray,
         corners_tmp,
         cv::Size(3, 3),
         cv::Size(-1, -1),
-        cv::TermCriteria(CV_TERMCRIT_ITER | CV_TERMCRIT_EPS, 20, 0.03));
+        cv::TermCriteria((cv::TermCriteria::COUNT | cv::TermCriteria::EPS), 20, 0.03));
 
     cv::drawChessboardCorners(img, {PAT_COL, PAT_ROW}, corners_tmp, true);
     cv::imshow(window_name, img);
@@ -179,7 +179,7 @@ void CameraCalibration::readImage(std::string images_dir)
     for (int i = 0; i < IMAGE_NUM_MAX; i++) {
         std::stringstream ss;
         ss << images_dir << "/calib_img" << std::setw(2) << std::setfill('0') << i << ".png";
-        cv::Mat tmp_img = cv::imread(ss.str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat tmp_img = cv::imread(ss.str(), cv::IMREAD_COLOR);
         if (tmp_img.data == NULL) {
             std::cerr << "cannot open : " << ss.str() << std::endl;
         } else {
@@ -218,15 +218,15 @@ void CameraCalibration::compareCorrection(std::string device_dir)
     std::cout << "[compare corrected image]" << std::endl;
     cv::VideoCapture video(device_dir);
     std::string show_window_name = "show image";
-    cv::namedWindow(show_window_name, CV_WINDOW_AUTOSIZE);
+    cv::namedWindow(show_window_name, cv::WINDOW_AUTOSIZE);
     std::cout << params.intrinsic << std::endl;
 
     while (cv::waitKey(10) == -1) {
         cv::Mat src, dst, merge;
         video.read(src);
         cv::undistort(src, dst, params.intrinsic, params.distortion);
-        cv::putText(src, "src", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 200), 2, CV_AA);
-        cv::putText(dst, "dst", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 200), 2, CV_AA);
+        cv::putText(src, "src", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 200), 2, cv::LINE_AA);
+        cv::putText(dst, "dst", cv::Point(50, 50), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 200), 2, cv::LINE_AA);
         cv::hconcat(src, dst, merge);
         cv::imshow(show_window_name, merge);
     }
