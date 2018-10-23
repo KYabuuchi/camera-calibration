@@ -33,7 +33,7 @@ int main(/*int argc, char* argv[]*/)
             break;
         case 2:
             std::cout << "Input 'input_images_dir', 'xml_dir.xml'" << std::endl;
-            std::cout << " e.g.) ../reference/pseye ./out.xml" << std::endl;
+            std::cout << " e.g.) ../reference/pseye/ ./out.xml" << std::endl;
             std::cin >> images_dir >> device_dir;
             camera.calcParameters(images_dir, xml_dir);
             break;

@@ -23,9 +23,10 @@ else()
     message(STATUS "    libraries: ${OpenCV_LIBS}")
     message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
-    if(CMAKE_VERSION VERSION_LESS "2.8.11")
-        # Add OpenCV headers location to your include paths
-        include_directories(${OpenCV_INCLUDE_DIRS})
+    find_package(Boost COMPONENTS system filesystem REQUIRED)
+    if(Boost_FOUND)
+        include_directories(SYSTEM ${BOOST_INCLUDE_DIRS})
+        message("BOOST_FOUND ${BOOST_ROOT}")
     endif()
 
     # COMPILER
@@ -47,7 +48,11 @@ else()
 
     include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
     add_executable(sample test/main.cpp src/calibration.cpp)
-    target_link_libraries(sample ${OpenCV_LIBS})
+    target_link_libraries(
+        sample 
+        ${Boost_LIBRARIES}
+        boost_filesystem
+        ${OpenCV_LIBS})
     message(STATUS "'YOU CAN BUILD SAMPLE'")
 
     # Clean

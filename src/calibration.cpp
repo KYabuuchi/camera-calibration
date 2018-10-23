@@ -1,4 +1,7 @@
 #include "calibration/calibration.hpp"
+#include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
+#include <iostream>
 
 namespace Calibration
 {
@@ -170,25 +173,40 @@ bool CameraCalibration::foundCorners(cv::Mat img, const std::string WINDOW_NAME)
 }
 
 // 指定のディレクトリにある画像の読み込み
-void CameraCalibration::readImage(const std::string images_dir)
+void CameraCalibration::readImage(std::string images_dir)
 {
-    std::cout << "[ reading stored images at " << images_dir << " ]" << std::endl;
-
     src_imgs.clear();
 
+    // 最後に'/'がなければ追加
+    if (images_dir.back() != '/')
+        images_dir.push_back('/');
+    std::cout << "[ reading stored images at " << images_dir << " ]" << std::endl;
+
+
     int image_num = 0;
-    for (int i = 0; i < IMAGE_NUM_MAX; i++) {
-        std::stringstream ss;
-        ss << images_dir << "/calib_img" << std::setw(2) << std::setfill('0') << i << ".png";
-        cv::Mat tmp_img = cv::imread(ss.str(), cv::IMREAD_COLOR);
-        if (tmp_img.data == NULL) {
-            std::cerr << "cannot open : " << ss.str() << std::endl;
-        } else {
-            std::cerr << "have opened: " << ss.str() << std::endl;
-            src_imgs.push_back(tmp_img);
-            image_num++;
+    const boost::filesystem::path path(images_dir);
+    boost::system::error_code error;
+
+    if (not boost::filesystem::exists(path, error)) {
+        valid_image_num = 0;
+        std::cout << "there is no directories" << std::endl;
+    }
+
+    for (const auto& e : boost::make_iterator_range(boost::filesystem::directory_iterator(path), {})) {
+        if (!boost::filesystem::is_directory(e)) {
+            const std::string file_name = images_dir + e.path().filename().generic_string();
+            cv::Mat tmp_img = cv::imread(file_name, cv::IMREAD_COLOR);
+
+            if (tmp_img.data == NULL) {
+                std::cerr << "cannot open : " << file_name << std::endl;
+            } else {
+                std::cerr << "safely opened: " << file_name << std::endl;
+                src_imgs.push_back(tmp_img);
+                image_num++;
+            }
         }
     }
+
     valid_image_num = image_num;
     std::cout << "[ found " << valid_image_num << " images ]" << std::endl;
 }
