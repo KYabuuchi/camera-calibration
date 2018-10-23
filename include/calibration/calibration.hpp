@@ -7,11 +7,11 @@
 
 namespace Calibration
 {
-constexpr int IMAGE_NUM_MAX = 25;
-constexpr int PAT_ROW = 7;
-constexpr int PAT_COL = 10;
-constexpr int PAT_SIZE = PAT_ROW * PAT_COL;
-constexpr float CHESS_SIZE = 19.5f;
+constexpr int IMAGE_NUM_MAX = 25;            // 画像の最大枚数
+constexpr int PAT_ROW = 7;                   // コーナーの行数
+constexpr int PAT_COL = 10;                  // コーナーの列数
+constexpr int PAT_SIZE = PAT_ROW * PAT_COL;  // コーナーの数
+constexpr float CHESS_SIZE = 19.5f;          // 1マスのサイズ(mm)
 
 struct CameraParameters {
     cv::Mat intrinsic = cv::Mat(3, 3, CV_32FC1);
@@ -29,14 +29,19 @@ class CameraCalibration
 public:
     CameraCalibration() = default;
 
+    // 既存の画像群からカメラパラメータを計算し，XMLファイルに保存する
     int calcParameters(std::string images_dir, std::string xml_dir);
 
+    // カメラで写真をとり，画像群からパラメータを計算し，XMLファイルに保存する
     int calcParametersWithPhoto(std::string images_dir, std::string xml_dir, std::string device_dir);
 
+    // パラメータを適応して，カメラからの出力を歪ませる
     int adaptParameters(std::string xml_dir, std::string device_dir);
 
+    // XMLファイルを読み込み，カメラパラメータを取得する
     CameraParameters readParameters(std::string xml_dir);
 
+    // カメラパラメータを出力する
     void showParameters();
 
 private:
