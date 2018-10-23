@@ -34,7 +34,8 @@ int CameraCalibration::calcParameters(const std::string images_dir, const std::s
     int tmp_image_num = valid_image_num;
 
     for (int i = 0; i < tmp_image_num; i++) {
-        foundCorners(src_imgs.at(i), WINDOW_NAME);
+        if (not foundCorners(src_imgs.at(i), WINDOW_NAME))
+            valid_image_num--;
     }
     cv::destroyWindow(WINDOW_NAME);
 
@@ -71,25 +72,41 @@ int CameraCalibration::calcParametersWithPhoto(const std::string images_dir, con
     cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE);
 
     // キー入力のたびに画像を保存
-    valid_image_num = IMAGE_NUM_MAX;
-    for (int i = 0; i < valid_image_num;) {
-        std::cout << "PRESS KEY when the camera gazes tha pattern. "
-                  << (valid_image_num - i) << " left" << std::endl;
+    valid_image_num = 0;
+    bool loop = true;
+    while (loop) {
+        std::cout << "PRESS 's' when the camera gazes tha pattern. PRESS 'q' to escape  "
+                  << valid_image_num << " saved" << std::endl;
 
         cv::Mat src;
-        while (cv::waitKey(10) == -1) {
+        int key = -1;
+        while (key == -1) {
+            key = cv::waitKey(10);
             video >> src;
-            std::stringstream ss;
-            ss << images_dir + "/calib_img" << std::setw(2) << std::setfill('0') << i << ".png";
-            cv::imwrite(ss.str(), src);
             cv::imshow(WINDOW_NAME, src);
         }
 
-        if (foundCorners(src, WINDOW_NAME)) {
-            i++;
-            src_imgs.push_back(src);
-        } else {
-            std::cout << "NOT found the pattern completely" << std::endl;
+        switch (key) {
+        case 's':
+
+            if (foundCorners(src, WINDOW_NAME)) {
+                valid_image_num++;
+                src_imgs.push_back(src);
+
+                // 保存
+                std::stringstream ss;
+                ss << images_dir + "/calib_img" << std::setw(2) << std::setfill('0') << valid_image_num << ".png";
+                cv::imwrite(ss.str(), src);
+            } else {
+                std::cout << "NOT found the pattern completely" << std::endl;
+            }
+
+            break;
+        case 'q':
+            loop = false;
+            break;
+        default:
+            break;
         }
     }
     video.release();
@@ -147,7 +164,6 @@ bool CameraCalibration::foundCorners(cv::Mat img, const std::string WINDOW_NAME)
         std::cout << "ok" << std::endl;
     } else {
         std::cerr << "fail" << std::endl;
-        valid_image_num--;
         return false;
     }
 

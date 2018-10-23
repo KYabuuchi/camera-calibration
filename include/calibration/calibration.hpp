@@ -7,12 +7,6 @@
 
 namespace Calibration
 {
-constexpr int IMAGE_NUM_MAX = 25;            // 画像の最大枚数
-constexpr int PAT_ROW = 7;                   // コーナーの行数
-constexpr int PAT_COL = 10;                  // コーナーの列数
-constexpr int PAT_SIZE = PAT_ROW * PAT_COL;  // コーナーの数
-constexpr float CHESS_SIZE = 19.5f;          // 1マスのサイズ(mm)
-
 struct CameraParameters {
     cv::Mat intrinsic = cv::Mat(3, 3, CV_32FC1);
     cv::Mat rotation = cv::Mat(3, 3, CV_32FC1);
@@ -27,7 +21,8 @@ class CameraCalibration
     using vv_point3f = std::vector<std::vector<cv::Point3f>>;
 
 public:
-    CameraCalibration() = default;
+    CameraCalibration(int PAT_ROW = 7, int PAT_COL = 10, float CHESS_SIZE = 19.5f)
+        : PAT_ROW(PAT_ROW), PAT_COL(PAT_ROW), PAT_SIZE(PAT_ROW * PAT_COL), CHESS_SIZE(CHESS_SIZE) {}
 
     // 既存の画像群からカメラパラメータを計算し，XMLファイルに保存する
     int calcParameters(std::string images_dir, std::string xml_dir);
@@ -45,6 +40,11 @@ public:
     void showParameters();
 
 private:
+    int PAT_ROW = 7;                   // コーナーの行数
+    int PAT_COL = 10;                  // コーナーの列数
+    int PAT_SIZE = PAT_ROW * PAT_COL;  // コーナーの数
+    float CHESS_SIZE = 19.5f;          // 1マスのサイズ(mm)
+
     int valid_image_num;
     std::vector<cv::Mat> src_imgs;
     vv_point2f corners;
