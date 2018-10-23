@@ -4,13 +4,10 @@ namespace Calibration
 {
 int CameraCalibration::adaptParameters(std::string xml_dir, std::string device_dir)
 {
-    // (0)初期化
     init();
 
-    // (1)XMLファイルの読み込み
     readXML(xml_dir);
 
-    // (2)歪補正
     compareCorrection(device_dir);
 
     return 0;
@@ -18,14 +15,10 @@ int CameraCalibration::adaptParameters(std::string xml_dir, std::string device_d
 
 int CameraCalibration::calcParameters(std::string images_dir, std::string xml_dir)
 {
-    // (0)データ初期化
     init();
 
-    // (1)キャリブレーション画像の読み込み
     readImage(images_dir);
 
-    // (2)キャリブレーションパターンのコーナー検出
-    // (3)コーナー位置をサブピクセル精度に修正，描画
     std::string window_name = "Calibration";
     cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
     int tmp_image_num = valid_image_num;
@@ -35,7 +28,6 @@ int CameraCalibration::calcParameters(std::string images_dir, std::string xml_di
     }
     cv::destroyWindow(window_name);
 
-    // (4)3次元空間座標の設定
     for (int i = 0; i < valid_image_num; i++) {
         std::vector<cv::Point3f> objects_tmp;
 
@@ -47,10 +39,8 @@ int CameraCalibration::calcParameters(std::string images_dir, std::string xml_di
         object_points.push_back(objects_tmp);
     }
 
-    // (5)内部パラメータ，外部パラメータ，歪み係数の推定
     calibrate();
 
-    // (6)XMLファイルへの書き出し
     outputXML(xml_dir);
 
     std::cout << "\n[parameters estimation is done]" << std::endl;
@@ -60,12 +50,8 @@ int CameraCalibration::calcParameters(std::string images_dir, std::string xml_di
 
 int CameraCalibration::calcParametersWithPhoto(std::string images_dir, std::string xml_dir, std::string device_dir)
 {
-    // (0)データ初期化
     init();
 
-    // (1)キャリブレーション画像の撮影
-    // (2)キャリブレーションパターンのコーナー検出
-    // (3)コーナー位置をサブピクセル精度に修正，描画
     cv::VideoCapture video(device_dir);
     std::string window_name = "Calibration";
     cv::namedWindow(window_name, cv::WINDOW_AUTOSIZE);
@@ -95,7 +81,6 @@ int CameraCalibration::calcParametersWithPhoto(std::string images_dir, std::stri
 
     cv::destroyWindow(window_name);
 
-    // (4)3次元空間座標の設定
     for (int i = 0; i < valid_image_num; i++) {
         std::vector<cv::Point3f> objects_tmp;
 
@@ -108,13 +93,10 @@ int CameraCalibration::calcParametersWithPhoto(std::string images_dir, std::stri
     }
 
 
-    // (5)内部パラメータ，外部パラメータ，歪み係数の推定
     calibrate();
 
-    // (6)XMLファイルへの書き出し
     outputXML(xml_dir);
 
-    // (7)歪補正
     compareCorrection(device_dir);
 
     std::cout << "[parameters estimation is done]" << std::endl;
