@@ -164,6 +164,8 @@ bool CameraCalibration::foundCorners(cv::Mat img, const std::string WINDOW_NAME)
         std::cout << "ok" << std::endl;
     } else {
         std::cerr << "fail" << std::endl;
+        cv::imshow(WINDOW_NAME, img);
+        cv::waitKey(200);
         return false;
     }
 

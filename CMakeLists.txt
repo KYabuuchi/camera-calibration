@@ -55,6 +55,8 @@ else()
         ${OpenCV_LIBS})
     message(STATUS "'YOU CAN BUILD SAMPLE'")
 
+    add_custom_target(ctags ALL COMMAND "cp" "../reference/input.txt" "./input.txt" )
+
     # Clean
     add_custom_target(cmake-clean
         COMMAND rm -rf `find ${CMAKE_BINARY_DIR} -name \"*[cC][mM]ake*\" -and -not -name \"CMakeLists.txt\"`

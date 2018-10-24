@@ -22,7 +22,7 @@ class CameraCalibration
 
 public:
     CameraCalibration(int PAT_ROW = 7, int PAT_COL = 10, float CHESS_SIZE = 19.5f)
-        : PAT_ROW(PAT_ROW), PAT_COL(PAT_ROW), PAT_SIZE(PAT_ROW * PAT_COL), CHESS_SIZE(CHESS_SIZE) {}
+        : PAT_ROW(PAT_ROW), PAT_COL(PAT_COL), PAT_SIZE(PAT_ROW * PAT_COL), CHESS_SIZE(CHESS_SIZE) {}
 
     // 既存の画像群からカメラパラメータを計算し，XMLファイルに保存する
     int calcParameters(std::string images_dir, std::string xml_dir);
