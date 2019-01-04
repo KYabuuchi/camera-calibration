@@ -3,7 +3,7 @@
 
 int main(/*int argc, char* argv[]*/)
 {
-    Calibration::CameraCalibration camera;
+    Camera::Calibration camera(5, 7, 19.5f);
 
     int mode = 0;
     std::string images_dir, xml_dir, device_dir;
@@ -36,12 +36,6 @@ int main(/*int argc, char* argv[]*/)
             std::cout << " e.g.) ../reference/pseye/ ./out.xml" << std::endl;
             std::cin >> images_dir >> xml_dir;
             camera.calcParameters(images_dir, xml_dir);
-            break;
-        case 3:
-            std::cout << "Input 'xml_dir.xml', 'device_dir'" << std::endl;
-            std::cout << " e.g.)  ./out.xml /dev/video0" << std::endl;
-            std::cin >> xml_dir >> device_dir;
-            camera.adaptParameters(xml_dir, device_dir);
             break;
         case 4:
             std::cout << "Input 'xml_dir.xml'" << std::endl;

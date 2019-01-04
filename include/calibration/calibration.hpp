@@ -1,64 +1,63 @@
 #pragma once
 #include <opencv2/opencv.hpp>
-#include <sstream>
-#include <string>
 #include <vector>
 
-
-namespace Calibration
+namespace Camera
 {
-struct CameraParameters {
+struct Parameters {
     cv::Mat intrinsic = cv::Mat(3, 3, CV_32FC1);
     cv::Mat rotation = cv::Mat(3, 3, CV_32FC1);
     cv::Mat translation = cv::Mat(1, 3, CV_32FC1);
     cv::Mat distortion = cv::Mat(1, 4, CV_32FC1);
-    double RMS = 0;
+    double RMS = -1;
 };
 
-class CameraCalibration
+class Calibration
 {
     using vv_point2f = std::vector<std::vector<cv::Point2f>>;
     using vv_point3f = std::vector<std::vector<cv::Point3f>>;
 
 public:
-    CameraCalibration(int PAT_ROW = 7, int PAT_COL = 10, float CHESS_SIZE = 19.5f)
-        : PAT_ROW(PAT_ROW), PAT_COL(PAT_COL), PAT_SIZE(PAT_ROW * PAT_COL), CHESS_SIZE(CHESS_SIZE) {}
+    // 行数,列数,寸法[mm]
+    Calibration(int row, int col, float size)
+        : ROW(row), COL(col), NUM(row * col), SIZE(size) {}
 
     // 既存の画像群からカメラパラメータを計算し，XMLファイルに保存する
-    int calcParameters(std::string images_dir, std::string xml_dir);
+    int calcParameters(const std::string paths_file_path, const std::string xml_path);
 
     // カメラで写真をとり，画像群からパラメータを計算し，XMLファイルに保存する
-    int calcParametersWithPhoto(std::string images_dir, std::string xml_dir, std::string device_dir);
+    int calcParametersWithPhoto(std::string images_dir, const std::string xml_path, const std::string device_path);
 
-    // パラメータを適応して，カメラからの出力を歪ませる
-    int adaptParameters(std::string xml_dir, std::string device_dir);
+    // XMLファイルを読み込み，パラメータを取得する
+    Parameters readParameters(std::string xml_path);
 
-    // XMLファイルを読み込み，カメラパラメータを取得する
-    CameraParameters readParameters(std::string xml_dir);
+    // パラメータを取得して，XMLファイルを書き込む
+    std::string writeParameters(const Parameters parameters);
 
-    // カメラパラメータを出力する
-    void showParameters();
+    // パラメータを取得する
+    Parameters getParameters() const;
+
+    // パラメータを標準出力に流す
+    void showParameters() const;
 
 private:
-    int PAT_ROW = 7;                   // コーナーの行数
-    int PAT_COL = 10;                  // コーナーの列数
-    int PAT_SIZE = PAT_ROW * PAT_COL;  // コーナーの数
-    float CHESS_SIZE = 19.5f;          // 1マスのサイズ(mm)
+    const int ROW;     // コーナーの行数
+    const int COL;     // コーナーの列数
+    const int NUM;     // コーナーの数
+    const float SIZE;  // 1マスのサイズ(mm)
 
-    int valid_image_num;
-    std::vector<cv::Mat> src_imgs;
-    vv_point2f corners;
-    vv_point3f object_points;
+    std::vector<cv::Mat> m_src_imgs;
+    vv_point2f m_corners;
+    vv_point3f m_object_points;
+    Parameters m_parameters;
 
-    CameraParameters params;
-
-    void compareCorrection(std::string device_dir);
+    void compareCorrection(std::string device_path);
     void calibrate();
     bool foundCorners(cv::Mat img, std::string window_name);
-    void readImage(std::string images_dir);
-    void outputXML(std::string xml_dir);
-    bool readXML(std::string xml_dir);
+    void readImage(std::string paths_file_path);
+    void outputXML(std::string xml_path);
+    bool readXML(std::string xml_path);
     void init();
 };
 
-}  // namespace Calibration
+}  // namespace Camera

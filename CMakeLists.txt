@@ -1,69 +1,60 @@
-# cmake needs this line
 cmake_minimum_required(VERSION 3.0)
-
-# project name
 project(camera-calibration)
+
+# Set default build type to Release
+if(NOT DEFINED CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+endif()
 
 # If toplevel
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_LIST_DIR)
     set(TOPLEVEL True)
 endif()
 
+# OpenCV
+find_package(OpenCV 3.0 REQUIRED)
+
 if(NOT TOPLEVEL)
-    # can use as Library
     include_directories(include)
-    file(GLOB_RECURSE CAMERA_CALIBRATION_SOURCES  src/*.cpp)
+    file(GLOB_RECURSE CAMERA_CALIBRATION_SOURCES src/*.cpp)
     add_library(camera-calibration STATIC ${CAMERA_CALIBRATION_SOURCES})
-
 else()
-    # OpenCV
-    find_package(OpenCV REQUIRED)
-    message(STATUS "OpenCV library status:")
-    message(STATUS "    version: ${OpenCV_VERSION}")
-    message(STATUS "    libraries: ${OpenCV_LIBS}")
-    message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
 
-    find_package(Boost COMPONENTS system filesystem REQUIRED)
-    if(Boost_FOUND)
-        include_directories(SYSTEM ${BOOST_INCLUDE_DIRS})
-        message("BOOST_FOUND ${BOOST_ROOT}")
-    endif()
-
-    # COMPILER
+    # コンパイラーがC++17に対応しているかチェック
     include(CheckCXXCompilerFlag)
-    CHECK_CXX_COMPILER_FLAG("-std=gnu++14" COMPILER_SUPPORTS_CXX14)
-    if(COMPILER_SUPPORTS_CXX14)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++14")
-    else()
-        message(FATAL_ERROR
-            "${CMAKE_CXX_COMPILER} C++14 is not supported. \n"
-            "EXAMPLE $ cmake -DCMAKE_CXX_COMPILER=/usr/bin/g++-5 ..")
+    message("Using C++17")
+    enable_language(CXX)
+    # set(CMAKE_CXX_STANDARD 17)
+    check_cxx_compiler_flag("-std=gnu++17" COMPILER_SUPPORTS_CXX17)
+    if(NOT ${COMPILER_SUPPORTS_CXX17})
+        message(
+            FATAL_ERROR
+                "${CMAKE_CXX_COMPILER} はC++17をサポートしてません。C++17に対応したコンパイラを指定してください。\n"
+            )
     endif()
+    set(CMAKE_CXX_FLAGS "-std=gnu++17 ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-std=gnu99 ${CMAKE_C_FLAGS}")
     message("Compiler:\n\t${CMAKE_CXX_COMPILER}")
 
-    # Set default build type to Release
-    if(CMAKE_BUILD_TYPE STREQUAL "")
-        set(CMAKE_BUILD_TYPE Release)
-    endif()
+    # Set warning flags
+    set(CXX_WARNING_FLAGS
+        -Wall
+        -Wextra
+        -Wconversion
+        -Wswitch-default
+        -Wdisabled-optimization
+        -Wformat
+        -Winit-self
+        -Woverloaded-virtual
+        -Wfloat-equal
+        -Wno-old-style-cast
+        -Wno-pragmas)
+    foreach(FLAG IN LISTS CXX_WARNING_FLAGS)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+    endforeach()
+    message("Build type:\n\t${CMAKE_BUILD_TYPE}")
 
     include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
     add_executable(sample test/main.cpp src/calibration.cpp)
-    target_link_libraries(
-        sample 
-        ${Boost_LIBRARIES}
-        boost_filesystem
-        ${OpenCV_LIBS})
-    message(STATUS "'YOU CAN BUILD SAMPLE'")
-
-    add_custom_target(ctags ALL COMMAND "cp" "../reference/input.txt" "./input.txt" )
-
-    # Clean
-    add_custom_target(cmake-clean
-        COMMAND rm -rf `find ${CMAKE_BINARY_DIR} -name \"*[cC][mM]ake*\" -and -not -name \"CMakeLists.txt\"`
-        COMMAND rm -rf `find ${CMAKE_BINARY_DIR} -name \"Makefile\"`)
-
-    add_custom_target(full-clean
-        COMMAND make clean
-        COMMAND make cmake-clean)
-
+    target_link_libraries(sample ${OpenCV_LIBS})
 endif()
