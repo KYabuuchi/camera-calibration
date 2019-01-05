@@ -1,4 +1,4 @@
-* toplebelでbuildするとsampleが生成されます．
+* toplevelでbuildするとsampleが生成されます．
 * サンプルには5つのモードがあります．
     * calib: 画像ファイルからキャリブレーションをし，xmlにパラメータを書き出す
     * photocalib: カメラで画像を撮影し，そのデータでキャリブレーションします．またxmlに書き出します．
