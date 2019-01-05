@@ -35,11 +35,13 @@ int main(int argc, char* argv[])
         std::string paths_file_path = parser.get<std::string>("input");
         std::string calibration_path = parser.get<std::string>("calibration");
         camera.calcParameters(paths_file_path, calibration_path);
+
     } else if (mode == "photocalib") {
         std::string device_path = parser.get<std::string>("device");
         std::string calibration_path = parser.get<std::string>("calibration");
         std::string output_dir = parser.get<std::string>("output");
         camera.calcParametersWithPhoto(output_dir, calibration_path, device_path);
+
     } else if (mode == "rectify") {
         std::string device_path = parser.get<std::string>("device");
         std::string calibration_path = parser.get<std::string>("calibration");
@@ -63,6 +65,7 @@ int main(int argc, char* argv[])
         std::string calibration_path = parser.get<std::string>("calibration");
         camera.readParameters(calibration_path);
         camera.showParameters();
+
     } else {
         parser.printMessage();
         std::cout << "invlid arguments" << std::endl;

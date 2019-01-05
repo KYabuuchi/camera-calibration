@@ -119,7 +119,6 @@ int Calibration::calcParametersWithPhoto(std::string output_dir, const std::stri
     return 0;
 }
 
-// カメラパラメータを計算する
 void Calibration::calibrate()
 {
     std::cout << "\nCALIBRATION START" << std::endl;
@@ -135,7 +134,6 @@ void Calibration::calibrate()
               << std::endl;
 }
 
-// コーナーをsubPixel精度で検出する
 bool Calibration::foundCorners(cv::Mat img, const std::string WINDOW_NAME)
 {
     std::vector<cv::Point2f> corners_tmp;
@@ -170,7 +168,6 @@ bool Calibration::foundCorners(cv::Mat img, const std::string WINDOW_NAME)
     return true;
 }
 
-// 指定のディレクトリにある画像の読み込み
 void Calibration::readImage(std::string paths_file_path)
 {
     m_src_imgs.clear();
@@ -205,7 +202,6 @@ void Calibration::readImage(std::string paths_file_path)
     std::cout << " found " << m_src_imgs.size() << " images " << std::endl;
 }
 
-// XMLファイルを読み込み
 bool Calibration::readXML(const std::string xml_path)
 {
     cv::FileStorage fs(xml_path, cv::FileStorage::READ);
@@ -228,8 +224,6 @@ bool Calibration::readXML(const std::string xml_path)
     return true;
 }
 
-
-// XMLファイルの出力
 void Calibration::outputXML(const std::string xml_path)
 {
     cv::FileStorage fs(xml_path, cv::FileStorage::WRITE);
@@ -242,7 +236,6 @@ void Calibration::outputXML(const std::string xml_path)
     std::cout << "" << xml_path << " has outputed" << std::endl;
 }
 
-// XMLファイルを読み込んで，表示する
 Parameters Calibration::readParameters(const std::string xml_path)
 {
     if (readXML(xml_path)) {
@@ -253,7 +246,6 @@ Parameters Calibration::readParameters(const std::string xml_path)
     }
 }
 
-// パラメータの表示
 void Calibration::showParameters() const
 {
     std::cout
