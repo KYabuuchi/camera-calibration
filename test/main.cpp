@@ -1,53 +1,69 @@
 #include "calibration/calibration.hpp"
 #include <iostream>
+#include <opencv2/opencv.hpp>
 
-int main(/*int argc, char* argv[]*/)
+int main(int argc, char* argv[])
 {
+    cv::CommandLineParser parser(
+        argc,
+        argv,
+        "{i input|../reference/pseye_000/files.txt| path to paths file for input images.}"
+        "{o output|./|path to directory for captured images.}"
+        "{c calib calibration xml x|calibration.xml| path to calibration file.}"
+        "{d device|| path to camera device.}"
+        "{m mode|calib|'calib' or 'photocalib' or 'rectify' or 'read'}"
+        "{r row |10|row(行) size of chess board}"
+        "{c col |7|col(列) size of chess board}"
+        "{s size|19.5|size of each square side on chess board [mm]}"
+        "{h help ?|false|Use like below.\n"
+        "$./sample -m=calib -i=../reference/pseye/files.txt -w=10 -c=7 -s=19.5 #calibration by using exsinting image\n"
+        "$./sample -m=photocalib -d=/dev/video0 -o=./ -c=calibration.xml -w=10 -c=7 -s=19.5 #shot some pictures & calibration by using them\n"
+        "$./sample -m=rectify -v=/dev/video0 -c=calibration.xml #rectify video stream by calibration data\n"
+        "$./sample -m=read -c=calibration.xml #read & print calibration data}");
+
+    if (parser.get<bool>("help")) {
+        parser.printMessage();
+        return 0;
+    }
     Camera::Calibration camera(5, 7, 19.5f);
 
-    int mode = 0;
-    std::string images_dir, xml_dir, device_dir;
+    std::string mode = parser.get<std::string>("mode");
 
-    while (1) {
-        std::cout << "\n"
-                  << " Input number of option\n"
-                  << "0: quit\n"
-                  << "1: photo -> calc parameters -> output to XML\n"
-                  << "2: calc parameters from pictures -> output to XML\n"
-                  << "3: open XML -> rectify video\n"
-                  << "4: open XML -> show parameters\n"
-                  << std::endl;
-
-        std::cin >> mode;
-
-        switch (mode) {
-        case 0:
-            std::cout << "quit." << std::endl;
-            return 0;
-            break;
-        case 1:
-            std::cout << "Input 'output_images_dir', 'xml_dir.xml', 'device_dir'" << std::endl;
-            std::cout << " e.g.) ./tmp/ ./out.xml /dev/video0" << std::endl;
-            std::cin >> images_dir >> xml_dir >> device_dir;
-            camera.calcParametersWithPhoto(images_dir, xml_dir, device_dir);
-            break;
-        case 2:
-            std::cout << "Input 'input_images_dir', 'xml_dir.xml'" << std::endl;
-            std::cout << " e.g.) ../reference/pseye/ ./out.xml" << std::endl;
-            std::cin >> images_dir >> xml_dir;
-            camera.calcParameters(images_dir, xml_dir);
-            break;
-        case 4:
-            std::cout << "Input 'xml_dir.xml'" << std::endl;
-            std::cout << " e.g.) ../reference/pseye/camera_pseye.xml" << std::endl;
-            std::cin >> xml_dir;
-            camera.readParameters(xml_dir);
-            break;
-        default:
-            std::cerr << mode << "is not supported." << std::endl;
+    if (mode == "calib") {
+        std::string paths_file_path = parser.get<std::string>("input");
+        std::string calibration_path = parser.get<std::string>("calibration");
+        camera.calcParameters(paths_file_path, calibration_path);
+    } else if (mode == "photocalib") {
+        std::string device_path = parser.get<std::string>("device");
+        std::string calibration_path = parser.get<std::string>("calibration");
+        std::string output_dir = parser.get<std::string>("output");
+        camera.calcParametersWithPhoto(output_dir, calibration_path, device_path);
+    } else if (mode == "rectify") {
+        std::string device_path = parser.get<std::string>("device");
+        std::string calibration_path = parser.get<std::string>("calibration");
+        camera.readParameters(calibration_path);
+        cv::VideoCapture video(device_path);
+        if (not video.isOpened()) {
+            std::cout << "can not open " << device_path << std::endl;
             return -1;
-            break;
         }
+        cv::namedWindow("window", cv::WINDOW_NORMAL);
+        while (true) {
+            cv::Mat src, dst, show;
+            video >> src;
+            dst = camera.rectify(src);
+            cv::hconcat(src, dst, show);
+            cv::imshow("window", show);
+            cv::waitKey(10);
+        }
+
+    } else if (mode == "load") {
+        std::string calibration_path = parser.get<std::string>("calibration");
+        camera.readParameters(calibration_path);
+        camera.showParameters();
+    } else {
+        parser.printMessage();
+        std::cout << "invlid arguments" << std::endl;
     }
 
     return 0;

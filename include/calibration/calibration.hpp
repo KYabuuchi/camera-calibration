@@ -26,7 +26,7 @@ public:
     int calcParameters(const std::string paths_file_path, const std::string xml_path);
 
     // カメラで写真をとり，画像群からパラメータを計算し，XMLファイルに保存する
-    int calcParametersWithPhoto(std::string images_dir, const std::string xml_path, const std::string device_path);
+    int calcParametersWithPhoto(std::string output_dir, const std::string xml_path, const std::string device_path);
 
     // XMLファイルを読み込み，パラメータを取得する
     Parameters readParameters(std::string xml_path);
@@ -39,6 +39,9 @@ public:
 
     // パラメータを標準出力に流す
     void showParameters() const;
+
+    // 入力画像を校正して返す
+    cv::Mat rectify(const cv::Mat source_image) const;
 
 private:
     const int ROW;     // コーナーの行数

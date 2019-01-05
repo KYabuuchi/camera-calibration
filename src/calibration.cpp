@@ -48,7 +48,7 @@ int Calibration::calcParameters(std::string paths_file_path, std::string xml_pat
     return 0;
 }
 
-int Calibration::calcParametersWithPhoto(std::string images_dir, const std::string xml_path, const std::string device_path)
+int Calibration::calcParametersWithPhoto(std::string output_dir, const std::string xml_path, const std::string device_path)
 {
     // 動画の準備
     cv::VideoCapture video(device_path);
@@ -57,9 +57,9 @@ int Calibration::calcParametersWithPhoto(std::string images_dir, const std::stri
 
     bool loop = true;
     int valid_image_num = 0;
-    if (*(images_dir.end() - 1) != '/')
-        images_dir.push_back('/');
-    std::ofstream ofs(images_dir + "files.txt");
+    if (*(output_dir.end() - 1) != '/')
+        output_dir.push_back('/');
+    std::ofstream ofs(output_dir + "files.txt");
 
     // キー入力のたびに画像を保存
     while (loop) {
@@ -82,7 +82,7 @@ int Calibration::calcParametersWithPhoto(std::string images_dir, const std::stri
 
                 // 保存
                 std::stringstream ss;
-                ss << images_dir + "/image_" << std::setw(3) << std::setfill('0') << valid_image_num << ".png";
+                ss << output_dir + "/image_" << std::setw(3) << std::setfill('0') << valid_image_num << ".png";
                 ofs << ss.str() << std::endl;
                 cv::imwrite(ss.str(), src);
             } else {
@@ -182,16 +182,25 @@ void Calibration::readImage(std::string paths_file_path)
         return;
     }
 
+    // ファイル名だけ削除
+    std::string dir = paths_file_path;
+    while (true) {
+        if (dir.empty() or *(dir.end() - 1) == '/')
+            break;
+        dir.erase(dir.end() - 1);
+    }
+
     std::string file_name;
     std::getline(ifs, file_name);
     while (not file_name.empty()) {
-        cv::Mat src_img = cv::imread(file_name, cv::IMREAD_COLOR);
+        cv::Mat src_img = cv::imread(dir + file_name, cv::IMREAD_COLOR);
         if (src_img.empty()) {
-            std::cerr << "cannot open : " << file_name << std::endl;
+            std::cerr << "cannot open : " << dir + file_name << std::endl;
         } else {
-            std::cerr << "safely opened: " << file_name << std::endl;
+            std::cerr << "safely opened: " << dir + file_name << std::endl;
             m_src_imgs.push_back(src_img);
         }
+        std::getline(ifs, file_name);
     }
 
     std::cout << " found " << m_src_imgs.size() << " images " << std::endl;
@@ -237,7 +246,6 @@ void Calibration::outputXML(const std::string xml_path)
 Parameters Calibration::readParameters(const std::string xml_path)
 {
     if (readXML(xml_path)) {
-        showParameters();
         return m_parameters;
     } else {
         std::cout << "return initial struct" << std::endl;
@@ -254,6 +262,13 @@ void Calibration::showParameters() const
         // << "\n[rotation] " << m_parameters.rotation
         // << "\n[translation] " << m_parameters.translation
         << "\n[RMS] " << m_parameters.RMS << std::endl;
+}
+
+cv::Mat Calibration::rectify(const cv::Mat source_image) const
+{
+    cv::Mat destnation_image;
+    cv::undistort(source_image, destnation_image, m_parameters.intrinsic, m_parameters.distortion);
+    return destnation_image;
 }
 
 }  // namespace Camera
