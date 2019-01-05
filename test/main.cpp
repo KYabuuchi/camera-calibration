@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
         "{i input|../reference/pseye_000/files.txt| path to paths file for input images.}"
         "{o output|./|path to directory for captured images.}"
         "{c calib calibration xml x|calibration.xml| path to calibration file.}"
-        "{d device|| path to camera device.}"
+        "{d device v video|/dev/video0| path to camera device.}"
         "{m mode|calib|'calib' or 'photocalib' or 'rectify' or 'read'}"
         "{r row |10|row(行) size of chess board}"
         "{c col |7|col(列) size of chess board}"
@@ -20,15 +20,17 @@ int main(int argc, char* argv[])
         "$./sample -m=photocalib -d=/dev/video0 -o=./ -c=calibration.xml -w=10 -c=7 -s=19.5 #shot some pictures & calibration by using them\n"
         "$./sample -m=rectify -v=/dev/video0 -c=calibration.xml #rectify video stream by calibration data\n"
         "$./sample -m=read -c=calibration.xml #read & print calibration data}");
-
     if (parser.get<bool>("help")) {
         parser.printMessage();
         return 0;
     }
-    Camera::Calibration camera(5, 7, 19.5f);
+
+    int row = parser.get<int>("row");
+    int col = parser.get<int>("col");
+    float size = parser.get<float>("size");
+    Camera::Calibration camera(row, col, size);
 
     std::string mode = parser.get<std::string>("mode");
-
     if (mode == "calib") {
         std::string paths_file_path = parser.get<std::string>("input");
         std::string calibration_path = parser.get<std::string>("calibration");
@@ -54,9 +56,9 @@ int main(int argc, char* argv[])
             dst = camera.rectify(src);
             cv::hconcat(src, dst, show);
             cv::imshow("window", show);
-            cv::waitKey(10);
+            if (cv::waitKey(10) == 'q')
+                break;
         }
-
     } else if (mode == "load") {
         std::string calibration_path = parser.get<std::string>("calibration");
         camera.readParameters(calibration_path);

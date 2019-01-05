@@ -12,14 +12,13 @@ Parameters Calibration::getParameters() const
 }
 
 int Calibration::calcParameters(std::string paths_file_path, std::string xml_path)
-
 {
     readImage(paths_file_path);
 
     // コーナー検出
     const std::string WINDOW_NAME = "Corner Detection";
     cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE);
-    for (size_t i = 0; i < m_src_imgs.size(); i++) {
+    for (size_t i = 0; i < m_src_imgs.size();) {
         if (not foundCorners(m_src_imgs.at(i), WINDOW_NAME)) {
             m_src_imgs.erase(m_src_imgs.begin() + i);
         } else {
@@ -195,9 +194,9 @@ void Calibration::readImage(std::string paths_file_path)
     while (not file_name.empty()) {
         cv::Mat src_img = cv::imread(dir + file_name, cv::IMREAD_COLOR);
         if (src_img.empty()) {
-            std::cerr << "cannot open : " << dir + file_name << std::endl;
+            std::cout << "[ERROR] cannot open : " << dir + file_name << std::endl;
         } else {
-            std::cerr << "safely opened: " << dir + file_name << std::endl;
+            std::cout << "completely opened: " << dir + file_name << std::endl;
             m_src_imgs.push_back(src_img);
         }
         std::getline(ifs, file_name);
@@ -209,13 +208,14 @@ void Calibration::readImage(std::string paths_file_path)
 // XMLファイルを読み込み
 bool Calibration::readXML(const std::string xml_path)
 {
-    std::cout << "[ open " << xml_path << " ] " << std::endl;
     cv::FileStorage fs(xml_path, cv::FileStorage::READ);
 
     if (not fs.isOpened()) {
-        std::cout << "can not open " << xml_path << std::endl;
+        std::cout << "[ERROR] can not open " << xml_path << std::endl;
         return false;
     }
+    std::cout << "completely open " << xml_path << std::endl;
+
     fs["intrinsic"] >> m_parameters.intrinsic;
     fs["distortion"] >> m_parameters.distortion;
     // fs["rotation"] >> m_parameters.rotation;
@@ -248,7 +248,7 @@ Parameters Calibration::readParameters(const std::string xml_path)
     if (readXML(xml_path)) {
         return m_parameters;
     } else {
-        std::cout << "return initial struct" << std::endl;
+        std::cout << "[ERROR] can not open " << xml_path << std::endl;
         return Parameters();
     }
 }
@@ -257,11 +257,11 @@ Parameters Calibration::readParameters(const std::string xml_path)
 void Calibration::showParameters() const
 {
     std::cout
-        << "\n[intrinsic] " << m_parameters.intrinsic
-        << "\n[distortion] " << m_parameters.distortion
+        << "\nintrinsic\n " << m_parameters.intrinsic
+        << "\ndistortion\n " << m_parameters.distortion
         // << "\n[rotation] " << m_parameters.rotation
         // << "\n[translation] " << m_parameters.translation
-        << "\n[RMS] " << m_parameters.RMS << std::endl;
+        << "\nRMS\n " << m_parameters.RMS << std::endl;
 }
 
 cv::Mat Calibration::rectify(const cv::Mat source_image) const
