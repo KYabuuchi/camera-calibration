@@ -19,7 +19,6 @@ if(NOT TOPLEVEL)
     file(GLOB_RECURSE CAMERA_CALIBRATION_SOURCES src/*.cpp)
     add_library(camera-calibration STATIC ${CAMERA_CALIBRATION_SOURCES})
 else()
-
     # コンパイラーがC++17に対応しているかチェック
     include(CheckCXXCompilerFlag)
     message("Using C++17")
@@ -32,8 +31,7 @@ else()
                 "${CMAKE_CXX_COMPILER} はC++17をサポートしてません。C++17に対応したコンパイラを指定してください。\n"
             )
     endif()
-    set(CMAKE_CXX_FLAGS "-std=gnu++17 ${CMAKE_CXX_FLAGS}")
-    set(CMAKE_C_FLAGS "-std=gnu99 ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_STANDARD 17)
     message("Compiler:\n\t${CMAKE_CXX_COMPILER}")
 
     # Set warning flags
