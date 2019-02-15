@@ -55,6 +55,6 @@ else()
     message("Build type:\n\t${CMAKE_BUILD_TYPE}")
 
     include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
-    add_executable(sample test/main.cpp src/calibration.cpp)
+    add_executable(sample sample/main.cpp src/calibration.cpp)
     target_link_libraries(sample ${OpenCV_LIBS})
 endif()
