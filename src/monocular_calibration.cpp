@@ -75,12 +75,14 @@ bool MonocularCalibration::parser(const std::string& file_paths_file, std::vecto
 
 int MonocularCalibration::calcParameters(const std::string paths_file_path, const std::string yaml_path)
 {
+    // 画像読み込み
     std::vector<std::string> file_paths;
     parser(paths_file_path, file_paths);
     readImages(file_paths, m_src_images);
 
     // コーナー検出
-    cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(WINDOW_NAME, cv::WINDOW_NORMAL);
+    cv::resizeWindow(WINDOW_NAME, 960, 720);
     for (size_t i = 0; i < m_src_images.size();) {
         if (not foundCorners(m_src_images.at(i), m_corners)) {
             m_src_images.erase(m_src_images.begin() + i);

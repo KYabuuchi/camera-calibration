@@ -104,18 +104,19 @@ bool StereoCalibration::parser(
 
 int StereoCalibration::calcParameters(const std::string paths_file_path, const std::string yaml_path)
 {
+    // 画像読み込み
     std::vector<std::string> file_paths1, file_paths2;
     parser(paths_file_path, file_paths1, file_paths2);
     readImages(file_paths1, m_src_images1);
     readImages(file_paths2, m_src_images2);
-
     if (m_src_images1.size() != m_src_images2.size()) {
-        std::cout << "not equal nomber of src_image" << std::endl;
+        std::cout << "not equal nomber of src_images" << std::endl;
         return -1;
     }
 
     // コーナー検出
-    cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE);
+    cv::namedWindow(WINDOW_NAME, cv::WINDOW_NORMAL);
+    cv::resizeWindow(WINDOW_NAME, 960, 720);
     for (size_t i = 0; i < m_src_images1.size();) {
         if (foundCorners(m_src_images1.at(i), m_corners1) and foundCorners(m_src_images2.at(i), m_corners2)) {
             i++;
@@ -126,8 +127,10 @@ int StereoCalibration::calcParameters(const std::string paths_file_path, const s
     }
     cv::destroyWindow(WINDOW_NAME);
 
+    const size_t N = m_src_images1.size();
+
     // 実世界での座標の登録
-    for (size_t i = 0; i < m_src_images1.size(); i++) {
+    for (size_t i = 0; i < N; i++) {
         std::vector<cv::Point3f> objects_tmp;
         for (int j = 0; j < ROW; j++) {
             for (int k = 0; k < COL; k++) {
@@ -137,9 +140,27 @@ int StereoCalibration::calcParameters(const std::string paths_file_path, const s
         m_object_points.push_back(objects_tmp);
     }
 
-    // TODO: 外部パラメータ
-    calibrate(m_int_params1, m_ext_params, m_corners1, m_object_points, m_src_images1.at(0).size());
-    calibrate(m_int_params2, m_ext_params, m_corners2, m_object_points, m_src_images2.at(0).size());
+    ExtrinsicParams tmp1, tmp2;
+    calibrate(m_int_params1, tmp1, m_corners1, m_object_points, m_src_images1.at(0).size());
+    calibrate(m_int_params2, tmp2, m_corners2, m_object_points, m_src_images2.at(0).size());
+
+    // 外部パラメータの計算
+    cv::Mat xi = cv::Mat3d(1, 1);
+    cv::Mat t = cv::Mat3d(1, 1);
+    for (int i = 0; i < static_cast<int>(N); i++) {
+        xi += tmp2.rotation.row(i) - tmp1.rotation.row(i);
+        t += tmp2.translation.row(i) - tmp1.translation.row(i);
+    }
+    xi /= static_cast<double>(N);
+    t /= static_cast<double>(N);
+
+    cv::Rodrigues(xi, m_ext_params.rotation);
+    m_ext_params.translation = t;
+
+    std::cout << "rotation\n"
+              << m_ext_params.rotation.size() << std::endl;
+    std::cout << "translation\n"
+              << m_ext_params.translation.size() << std::endl;
 
     showParameters();
     writeYAML(yaml_path);
