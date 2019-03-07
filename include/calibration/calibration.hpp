@@ -2,65 +2,99 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-namespace Camera
+namespace Calibration
 {
-struct Parameters {
-    cv::Mat intrinsic = cv::Mat(3, 3, CV_32FC1);
-    cv::Mat rotation = cv::Mat(3, 3, CV_32FC1);
-    cv::Mat translation = cv::Mat(1, 3, CV_32FC1);
-    cv::Mat distortion = cv::Mat(1, 4, CV_32FC1);
+using vv_point2f = std::vector<std::vector<cv::Point2f>>;
+using vv_point3f = std::vector<std::vector<cv::Point3f>>;
+
+// 内部パラメータ
+struct IntrinsicParams {
+    cv::Mat intrinsic = cv::Mat::eye(3, 3, CV_32FC1);
+    cv::Mat distortion = cv::Mat::zeros(1, 4, CV_32FC1);
     double RMS = -1;
 };
-
-class Calibration
-{
-    using vv_point2f = std::vector<std::vector<cv::Point2f>>;
-    using vv_point3f = std::vector<std::vector<cv::Point3f>>;
-
-public:
-    // 行数,列数,寸法[mm]
-    Calibration(int row, int col, float size)
-        : ROW(row), COL(col), NUM(row * col), SIZE(size) {}
-
-    // 既存の画像群からカメラパラメータを計算し，XMLファイルに保存する
-    int calcParameters(const std::string paths_file_path, const std::string xml_path);
-
-    // カメラで写真をとり，画像群からパラメータを計算し，XMLファイルに保存する
-    int calcParametersWithPhoto(std::string output_dir, const std::string xml_path, const std::string device_path);
-
-    // XMLファイルを読み込み，パラメータを取得する
-    Parameters readParameters(std::string xml_path);
-
-    // パラメータを取得して，XMLファイルを書き込む
-    std::string writeParameters(const Parameters parameters);
-
-    // パラメータを取得する
-    Parameters getParameters() const;
-
-    // パラメータを標準出力に流す
-    void showParameters() const;
-
-    // 入力画像を校正して返す
-    cv::Mat rectify(const cv::Mat source_image) const;
-
-private:
-    const int ROW;     // コーナーの行数
-    const int COL;     // コーナーの列数
-    const int NUM;     // コーナーの数
-    const float SIZE;  // 1マスのサイズ(mm)
-
-    std::vector<cv::Mat> m_src_imgs;
-    vv_point2f m_corners;
-    vv_point3f m_object_points;
-    Parameters m_parameters;
-
-    void compareCorrection(std::string device_path);
-    void calibrate();
-    bool foundCorners(cv::Mat img, std::string window_name);
-    void readImage(std::string paths_file_path);
-    void outputXML(std::string xml_path);
-    bool readXML(std::string xml_path);
-    void init();
+// 外部パラメータ
+struct ExtrinsicParams {
+    cv::Mat rotation = cv::Mat::eye(3, 3, CV_32FC1);
+    cv::Mat translation = cv::Mat::zeros(1, 3, CV_32FC1);
 };
 
-}  // namespace Camera
+// pure virtual class
+class AbstCalibration
+{
+public:
+    // 行数,列数,寸法[mm]
+    explicit AbstCalibration(int row, int col, float size) : ROW(row), COL(col), NUM(row * col), SIZE(size), WINDOW_NAME("window") {}
+
+    virtual int calcParameters(const std::string paths_file_path, const std::string yaml_path) = 0;
+    virtual void showParameters() const = 0;
+
+    // YAMLへ書き込む・読み込む
+    virtual void writeYAML(const std::string file_path) const = 0;
+    virtual bool readYAML(std::string file_path) = 0;
+
+protected:
+    // コーナーの行数・列数・個数
+    const int ROW, COL, NUM;
+    // 1マスのサイズ(mm)
+    const float SIZE;
+    const std::string WINDOW_NAME;
+
+
+    bool foundCorners(const cv::Mat& img, vv_point2f& corners);
+    void readImages(const std::string paths_file_path, std::vector<cv::Mat>& src_images);
+    void calibrate(IntrinsicParams& int_params, ExtrinsicParams& ext_params, const vv_point2f& corners, const vv_point3f& points, const cv::Size& size);
+    virtual void init() = 0;
+};
+
+// for Monocular Camera
+class MonocularCalibration : public AbstCalibration
+{
+public:
+    // 行数,列数,寸法[mm]
+    explicit MonocularCalibration(int row, int col, float size) : AbstCalibration(row, col, size) {}
+
+    int calcParameters(const std::string paths_file_path, const std::string yaml_path) override;
+    void showParameters() const override;
+
+    void writeYAML(const std::string file_path) const override;
+    bool readYAML(std::string file_path) override;
+
+protected:
+    IntrinsicParams m_int_params;
+    void init() override;
+
+private:
+    std::vector<cv::Mat> m_src_images;
+    vv_point2f m_corners;
+    vv_point3f m_object_points;
+};
+
+// for Stereo Camera
+class StereoCalibration : public AbstCalibration
+{
+public:
+    // 行数,列数,寸法[mm]
+    explicit StereoCalibration(int row, int col, float size) : AbstCalibration(row, col, size) {}
+
+    int calcParameters(const std::string paths_file_path, const std::string yaml_path) override;
+    void showParameters() const override;
+
+    void writeYAML(const std::string file_path) const override;
+    bool readYAML(std::string file_path) override;
+
+protected:
+    ExtrinsicParams m_ext_params;
+    IntrinsicParams m_int_params1;
+    IntrinsicParams m_int_params2;
+    void init() override;
+
+private:
+    std::vector<cv::Mat> m_src_images1;
+    std::vector<cv::Mat> m_src_images2;
+    vv_point2f m_corners1;
+    vv_point2f m_corners2;
+    vv_point3f m_object_points;
+};
+
+}  // namespace Calibration
