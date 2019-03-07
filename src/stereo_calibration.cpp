@@ -18,12 +18,12 @@ void StereoCalibration::init()
 void StereoCalibration::showParameters() const
 {
     std::cout
-        << "\nintrinsic_1\n " << m_int_params1.intrinsic
-        << "\ndistortion_1\n " << m_int_params1.distortion
-        << "\nRMS_1\n " << m_int_params1.RMS
-        << "\nintrinsic_2\n " << m_int_params1.intrinsic
-        << "\ndistortion_2\n " << m_int_params1.distortion
-        << "\nRMS_2\n " << m_int_params1.RMS
+        << "\nintrinsic1\n " << m_int_params1.intrinsic
+        << "\ndistortion1\n " << m_int_params1.distortion
+        << "\nRMS1\n " << m_int_params1.RMS
+        << "\nintrinsic2\n " << m_int_params2.intrinsic
+        << "\ndistortion2\n " << m_int_params2.distortion
+        << "\nRMS2\n " << m_int_params2.RMS
         << "\n  rotation\n " << m_ext_params.rotation
         << "\n  translation\n " << m_ext_params.translation
         << std::endl;

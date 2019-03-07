@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
         argv,
         "{i input|../data/kinectv2_00/info.txt| path to paths file for input images.}"
         "{y yaml|./calibration.yaml| path to calibration file.}"
-        "{m mode|calib|'calib' or 'photocalib' or 'rectify' or 'read'}"
+        "{m mode|calib|'calib' or 'rectify' or 'read'}"
         "{r row |10|row(行) size of chess board}"
         "{c col |7|col(列) size of chess board}"
         "{s size|19.5|size of each square side on chess board [mm]}"
@@ -39,8 +39,8 @@ int main(int argc, char* argv[])
 
         cv::namedWindow("window1", cv::WINDOW_NORMAL);
         cv::namedWindow("window2", cv::WINDOW_NORMAL);
-        cv::Mat src1 = cv::imread("hoge");  // TODO:
-        cv::Mat src2 = cv::imread("hoge");  // TODO:
+        cv::Mat src1 = cv::imread("../data/kinectv2_00/ir02.png");
+        cv::Mat src2 = cv::imread("../data/kinectv2_00/rgb02.png");
         cv::Mat dst1, dst2, show1, show2;
         calibration.rectify(src1, src2, dst1, dst2);
         cv::hconcat(src1, dst1, show1);

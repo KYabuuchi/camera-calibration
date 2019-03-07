@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
         "{i input|../data/pseye_00/info.txt| path to paths file for input images.}"
         "{y yaml|../data/pseye_00/calibration.yaml| path to calibration file.}"
         "{d device v video|/dev/video0| path to camera device.}"
-        "{m mode|calib|'calib' or 'photocalib' or 'rectify' or 'read'}"
+        "{m mode|calib|'calib' or 'rectify' or 'read'}"
         "{r row |10|row(行) size of chess board}"
         "{c col |7|col(列) size of chess board}"
         "{s size|19.5|size of each square side on chess board [mm]}"
