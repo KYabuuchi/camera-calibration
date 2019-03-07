@@ -39,7 +39,6 @@ bool MonocularCalibration::readYAML(std::string file_path)
         std::cout << "[ERROR] can not open " << file_path << std::endl;
         return false;
     }
-    std::cout << "completely open " << file_path << std::endl;
 
     fs["intrinsic"] >> m_int_params.intrinsic;
     fs["distortion"] >> m_int_params.distortion;
@@ -50,12 +49,37 @@ bool MonocularCalibration::readYAML(std::string file_path)
     return true;
 }
 
+void MonocularCalibration::rectify(const cv::Mat& src_image, cv::Mat& dst_image) const
+{
+    cv::undistort(src_image, dst_image, m_int_params.intrinsic, m_int_params.distortion);
+}
+
+bool MonocularCalibration::parser(const std::string& file_paths_file, std::vector<std::string>& file_paths)
+{
+    std::ifstream ifs(file_paths_file);
+    if (not ifs.is_open()) {
+        std::cout << "[ERROR] can not open " << file_paths_file << std::endl;
+        return false;
+    }
+
+    std::string dir = directorize(file_paths_file);
+    while (not ifs.eof()) {
+        std::string file_path;
+        std::getline(ifs, file_path);
+        if (not file_path.empty())
+            file_paths.push_back(dir + file_path);
+    }
+    ifs.close();
+    return true;
+}
+
 int MonocularCalibration::calcParameters(const std::string paths_file_path, const std::string yaml_path)
 {
-    readImages(paths_file_path, m_src_images);
+    std::vector<std::string> file_paths;
+    parser(paths_file_path, file_paths);
+    readImages(file_paths, m_src_images);
 
     // コーナー検出
-    const std::string WINDOW_NAME = "Corner Detection";
     cv::namedWindow(WINDOW_NAME, cv::WINDOW_AUTOSIZE);
     for (size_t i = 0; i < m_src_images.size();) {
         if (not foundCorners(m_src_images.at(i), m_corners)) {

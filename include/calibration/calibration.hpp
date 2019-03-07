@@ -28,8 +28,6 @@ public:
 
     virtual int calcParameters(const std::string paths_file_path, const std::string yaml_path) = 0;
     virtual void showParameters() const = 0;
-
-    // YAMLへ書き込む・読み込む
     virtual void writeYAML(const std::string file_path) const = 0;
     virtual bool readYAML(std::string file_path) = 0;
 
@@ -42,8 +40,9 @@ protected:
 
 
     bool foundCorners(const cv::Mat& img, vv_point2f& corners);
-    void readImages(const std::string paths_file_path, std::vector<cv::Mat>& src_images);
+    void readImages(const std::vector<std::string>& file_paths, std::vector<cv::Mat>& src_images);
     void calibrate(IntrinsicParams& int_params, ExtrinsicParams& ext_params, const vv_point2f& corners, const vv_point3f& points, const cv::Size& size);
+    std::string directorize(std::string file_path);
     virtual void init() = 0;
 };
 
@@ -56,15 +55,19 @@ public:
 
     int calcParameters(const std::string paths_file_path, const std::string yaml_path) override;
     void showParameters() const override;
-
     void writeYAML(const std::string file_path) const override;
     bool readYAML(std::string file_path) override;
+    void rectify(const cv::Mat& src_image, cv::Mat& dst_image) const;
 
 protected:
     IntrinsicParams m_int_params;
     void init() override;
 
 private:
+    bool parser(
+        const std::string& file_paths_file,
+        std::vector<std::string>& file_paths);
+
     std::vector<cv::Mat> m_src_images;
     vv_point2f m_corners;
     vv_point3f m_object_points;
@@ -79,9 +82,9 @@ public:
 
     int calcParameters(const std::string paths_file_path, const std::string yaml_path) override;
     void showParameters() const override;
-
     void writeYAML(const std::string file_path) const override;
     bool readYAML(std::string file_path) override;
+    void rectify(const cv::Mat& src_image1, const cv::Mat& src_image2, cv::Mat& dst_image1, cv::Mat& dst_image2) const;
 
 protected:
     ExtrinsicParams m_ext_params;
@@ -90,6 +93,10 @@ protected:
     void init() override;
 
 private:
+    bool parser(const std::string& file_paths_file,
+        std::vector<std::string>& file_paths1,
+        std::vector<std::string>& file_paths2);
+
     std::vector<cv::Mat> m_src_images1;
     std::vector<cv::Mat> m_src_images2;
     vv_point2f m_corners1;

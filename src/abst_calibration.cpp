@@ -35,37 +35,18 @@ bool AbstCalibration::foundCorners(const cv::Mat& img, vv_point2f& corners)
     return true;
 }
 
-void AbstCalibration::readImages(const std::string paths_file_path, std::vector<cv::Mat>& src_images)
+void AbstCalibration::readImages(const std::vector<std::string>& file_paths, std::vector<cv::Mat>& src_images)
 {
     src_images.clear();
-
-    std::ifstream ifs(paths_file_path);
-    if (not ifs.is_open()) {
-        std::cout << "[ERROR] can not open " << paths_file_path << std::endl;
-        return;
-    }
-
-    // ファイル名だけ削除
-    std::string dir = paths_file_path;
-    while (true) {
-        if (dir.empty() or *(dir.end() - 1) == '/')
-            break;
-        dir.erase(dir.end() - 1);
-    }
-
-    std::string file_name;
-    std::getline(ifs, file_name);
-    while (not file_name.empty()) {
-        cv::Mat src_img = cv::imread(dir + file_name, cv::IMREAD_COLOR);
+    for (const std::string& file_path : file_paths) {
+        cv::Mat src_img = cv::imread(file_path, cv::IMREAD_COLOR);
         if (src_img.empty()) {
-            std::cout << "[ERROR] cannot open : " << dir + file_name << std::endl;
+            std::cout << "[ERROR] cannot open : " << file_path << std::endl;
         } else {
-            std::cout << "completely opened: " << dir + file_name << std::endl;
+            std::cout << "completely opened: " << file_path << std::endl;
             src_images.push_back(src_img);
         }
-        std::getline(ifs, file_name);
     }
-
     std::cout << " found " << src_images.size() << " images " << std::endl;
 }
 
@@ -83,5 +64,16 @@ void AbstCalibration::calibrate(IntrinsicParams& int_params, ExtrinsicParams& ex
     std::cout << "CALIBRATION FINISH\n"
               << std::endl;
 }
+
+std::string AbstCalibration::directorize(std::string file_path)
+{
+    while (true) {
+        if (file_path.empty() or *(file_path.end() - 1) == '/')
+            break;
+        file_path.erase(file_path.end() - 1);
+    }
+    return file_path;
+}
+
 
 }  // namespace Calibration
