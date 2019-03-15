@@ -13,9 +13,9 @@ int main(int argc, char* argv[])
         "{m mode|calib|'calib' or 'rectify' or 'read'}"
         "{r row |10|row(行) size of chess board}"
         "{c col |7|col(列) size of chess board}"
-        "{s size|19.5|size of each square side on chess board [mm]}"
+        "{s size|0.0195|size of each square side on chess board [mm]}"
         "{h help ?|false|Use like below.\n"
-        "$./monocular -m=calib -i=../data/pseye_00/info.txt -y=config.yaml -w=10 -c=7 -s=19.5 #calibration by using exsinting image\n"
+        "$./monocular -m=calib -i=../data/pseye_00/info.txt -y=config.yaml -w=10 -c=7 -s=0.0195 #calibration by using exsinting image\n"
         "$./monocular -m=rectify -y=../data/pseye_00/config.yaml -d=/dev/video0 #stream rectifyed images \n"
         "$./monocular -m=read -y=../data/pseye_00/config.yaml #read & print calibration data}");
     if (parser.get<bool>("help")) {

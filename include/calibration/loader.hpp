@@ -49,6 +49,7 @@ public:
 
     ExtrinsicParams extrinsic() { return m_ext_params; }
 
+    // extrinsic parameter
     cv::Mat1f R() { return cv::Mat1f(m_ext_params.rotation); }
     cv::Mat1f t() { return cv::Mat1f(m_ext_params.translation); }
     cv::Mat1f T()
@@ -62,9 +63,24 @@ public:
         return T;
     }
 
+    // alias
     cv::Mat1f rotation() { return R(); }
     cv::Mat1f translation() { return t(); }
     cv::Mat1f pose() { return T(); }
+
+    // inverse
+    cv::Mat1f invR() { return cv::Mat1f(m_ext_params.rotation.t()); }
+    cv::Mat1f invt() { return cv::Mat1f(-m_ext_params.translation); }
+    cv::Mat1f invT()
+    {
+        cv::Mat1f inv_T(cv::Mat1f::eye(4, 4));
+        if (m_ext_params.rotation.empty() or m_ext_params.translation.empty())
+            return cv::Mat();
+        invR().copyTo(inv_T.colRange(0, 3).rowRange(0, 3));
+        invt().copyTo(inv_T.col(3).rowRange(0, 3));
+        return inv_T;
+    }
+
 
 private:
     IntrinsicParams m_int_params;
