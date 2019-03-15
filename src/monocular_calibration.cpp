@@ -18,20 +18,23 @@ void MonocularCalibration::showParameters() const
     std::cout
         << "\nintrinsic\n " << m_int_params.intrinsic
         << "\ndistortion\n " << m_int_params.distortion
+        << "\nresolusion\n " << m_int_params.resolution
         << "\nRMS\n " << m_int_params.RMS << std::endl;
 }
 
-void MonocularCalibration::writeYAML(const std::string file_path) const
+void MonocularCalibration::writeConfig(const std::string file_path) const
 {
     cv::FileStorage fs(file_path, cv::FileStorage::WRITE);
     cv::write(fs, "intrinsic", m_int_params.intrinsic);
     cv::write(fs, "distortion", m_int_params.distortion);
+    cv::write(fs, "resolution", m_int_params.resolution);
     cv::write(fs, "RMS", m_int_params.RMS);
     fs.release();
-    std::cout << "" << file_path << " has outputed" << std::endl;
+    std::cout << "\n"
+              << file_path << " has outputed" << std::endl;
 }
 
-bool MonocularCalibration::readYAML(std::string file_path)
+bool MonocularCalibration::readConfig(std::string file_path)
 {
     cv::FileStorage fs(file_path, cv::FileStorage::READ);
 
@@ -42,6 +45,7 @@ bool MonocularCalibration::readYAML(std::string file_path)
 
     fs["intrinsic"] >> m_int_params.intrinsic;
     fs["distortion"] >> m_int_params.distortion;
+    fs["resolution"] >> m_int_params.resolution;
     fs["RMS"] >> m_int_params.RMS;
     fs.release();
 
@@ -84,9 +88,11 @@ int MonocularCalibration::calcParameters(const std::string paths_file_path, cons
     cv::namedWindow(WINDOW_NAME, cv::WINDOW_NORMAL);
     cv::resizeWindow(WINDOW_NAME, 960, 720);
     for (size_t i = 0; i < m_src_images.size();) {
-        if (not foundCorners(m_src_images.at(i), m_corners)) {
+        std::vector<cv::Point2f> corners;
+        if (not foundCorners(m_src_images.at(i), corners)) {
             m_src_images.erase(m_src_images.begin() + i);
         } else {
+            m_corners.push_back(corners);
             i++;
         }
     }
@@ -104,11 +110,12 @@ int MonocularCalibration::calcParameters(const std::string paths_file_path, cons
     }
 
     ExtrinsicParams tmp;
-    calibrate(m_int_params, tmp, m_corners, m_object_points, m_src_images.at(0).size());
+    m_int_params.resolution = m_src_images.at(0).size();
+    calibrate(m_int_params, tmp, m_corners, m_object_points, m_int_params.resolution);
 
     showParameters();
 
-    writeYAML(yaml_path);
+    writeConfig(yaml_path);
 
     return 0;
 }

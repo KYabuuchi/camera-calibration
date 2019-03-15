@@ -64,6 +64,9 @@ else()
     add_executable(record-webcam sample/record_webcam.cpp)
     target_link_libraries(record-webcam ${OpenCV_LIBS} stdc++fs)
 
+    add_executable(loader sample/loader.cpp)
+    target_link_libraries(loader ${OpenCV_LIBS} camera-calibration)
+
     find_library(FREENECT freenect2)
     message("libfreenect2:\n\t${FREENECT}")
     if(FREENECT)

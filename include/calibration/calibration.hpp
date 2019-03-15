@@ -1,24 +1,9 @@
 #pragma once
+#include "calibration/params_struct.hpp"
 #include <opencv2/opencv.hpp>
-#include <vector>
 
 namespace Calibration
 {
-using vv_point2f = std::vector<std::vector<cv::Point2f>>;
-using vv_point3f = std::vector<std::vector<cv::Point3f>>;
-
-// 内部パラメータ
-struct IntrinsicParams {
-    cv::Mat intrinsic = cv::Mat::eye(3, 3, CV_32FC1);
-    cv::Mat distortion = cv::Mat::zeros(1, 4, CV_32FC1);
-    double RMS = -1;
-};
-// 外部パラメータ
-struct ExtrinsicParams {
-    cv::Mat rotation = cv::Mat::eye(3, 3, CV_32FC1);
-    cv::Mat translation = cv::Mat::zeros(1, 3, CV_32FC1);
-};
-
 // pure virtual class
 class AbstCalibration
 {
@@ -28,8 +13,8 @@ public:
 
     virtual int calcParameters(const std::string paths_file_path, const std::string yaml_path) = 0;
     virtual void showParameters() const = 0;
-    virtual void writeYAML(const std::string file_path) const = 0;
-    virtual bool readYAML(std::string file_path) = 0;
+    virtual void writeConfig(const std::string file_path) const = 0;
+    virtual bool readConfig(std::string file_path) = 0;
 
 protected:
     // コーナーの行数・列数・個数
@@ -38,8 +23,7 @@ protected:
     const float SIZE;
     const std::string WINDOW_NAME;
 
-
-    bool foundCorners(const cv::Mat& img, vv_point2f& corners);
+    bool foundCorners(const cv::Mat& img, std::vector<cv::Point2f>& corners);
     void readImages(const std::vector<std::string>& file_paths, std::vector<cv::Mat>& src_images);
     void calibrate(IntrinsicParams& int_params, ExtrinsicParams& ext_params, const vv_point2f& corners, const vv_point3f& points, const cv::Size& size);
     std::string directorize(std::string file_path);
@@ -55,8 +39,8 @@ public:
 
     int calcParameters(const std::string paths_file_path, const std::string yaml_path) override;
     void showParameters() const override;
-    void writeYAML(const std::string file_path) const override;
-    bool readYAML(std::string file_path) override;
+    void writeConfig(const std::string file_path) const override;
+    bool readConfig(std::string file_path) override;
     void rectify(const cv::Mat& src_image, cv::Mat& dst_image) const;
 
 protected:
@@ -82,8 +66,8 @@ public:
 
     int calcParameters(const std::string paths_file_path, const std::string yaml_path) override;
     void showParameters() const override;
-    void writeYAML(const std::string file_path) const override;
-    bool readYAML(std::string file_path) override;
+    void writeConfig(const std::string file_path) const override;
+    bool readConfig(std::string file_path) override;
     void rectify(const cv::Mat& src_image1, const cv::Mat& src_image2, cv::Mat& dst_image1, cv::Mat& dst_image2) const;
 
 protected:

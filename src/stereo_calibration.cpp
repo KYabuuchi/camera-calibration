@@ -20,31 +20,36 @@ void StereoCalibration::showParameters() const
     std::cout
         << "\nintrinsic1\n " << m_int_params1.intrinsic
         << "\ndistortion1\n " << m_int_params1.distortion
+        << "\nresolution1\n " << m_int_params1.resolution
         << "\nRMS1\n " << m_int_params1.RMS
         << "\nintrinsic2\n " << m_int_params2.intrinsic
         << "\ndistortion2\n " << m_int_params2.distortion
+        << "\nresolution2\n " << m_int_params2.resolution
         << "\nRMS2\n " << m_int_params2.RMS
         << "\n  rotation\n " << m_ext_params.rotation
         << "\n  translation\n " << m_ext_params.translation
         << std::endl;
 }
 
-void StereoCalibration::writeYAML(const std::string file_path) const
+void StereoCalibration::writeConfig(const std::string file_path) const
 {
     cv::FileStorage fs(file_path, cv::FileStorage::WRITE);
     cv::write(fs, "intrinsic1", m_int_params1.intrinsic);
     cv::write(fs, "distortion1", m_int_params1.distortion);
+    cv::write(fs, "resolution1", m_int_params1.resolution);
     cv::write(fs, "RMS1", m_int_params1.RMS);
     cv::write(fs, "intrinsic2", m_int_params2.intrinsic);
     cv::write(fs, "distortion2", m_int_params2.distortion);
+    cv::write(fs, "resolution2", m_int_params2.resolution);
     cv::write(fs, "RMS2", m_int_params2.RMS);
     cv::write(fs, "rotation", m_ext_params.rotation);
     cv::write(fs, "translation", m_ext_params.translation);
     fs.release();
-    std::cout << "" << file_path << " has outputed" << std::endl;
+    std::cout << "\n"
+              << file_path << " has outputed" << std::endl;
 }
 
-bool StereoCalibration::readYAML(std::string file_path)
+bool StereoCalibration::readConfig(std::string file_path)
 {
     cv::FileStorage fs(file_path, cv::FileStorage::READ);
 
@@ -55,9 +60,11 @@ bool StereoCalibration::readYAML(std::string file_path)
 
     fs["intrinsic1"] >> m_int_params1.intrinsic;
     fs["distortion1"] >> m_int_params1.distortion;
+    fs["resolution1"] >> m_int_params1.resolution;
     fs["RMS1"] >> m_int_params1.RMS;
     fs["intrinsic2"] >> m_int_params2.intrinsic;
     fs["distortion2"] >> m_int_params2.distortion;
+    fs["resolution2"] >> m_int_params2.resolution;
     fs["RMS2"] >> m_int_params2.RMS;
     fs["rotation"] >> m_ext_params.rotation;
     fs["translation"] >> m_ext_params.translation;
@@ -118,7 +125,10 @@ int StereoCalibration::calcParameters(const std::string paths_file_path, const s
     cv::namedWindow(WINDOW_NAME, cv::WINDOW_NORMAL);
     cv::resizeWindow(WINDOW_NAME, 960, 720);
     for (size_t i = 0; i < m_src_images1.size();) {
-        if (foundCorners(m_src_images1.at(i), m_corners1) and foundCorners(m_src_images2.at(i), m_corners2)) {
+        std::vector<cv::Point2f> corners1, corners2;
+        if (foundCorners(m_src_images1.at(i), corners1) and foundCorners(m_src_images2.at(i), corners2)) {
+            m_corners1.push_back(corners1);
+            m_corners2.push_back(corners2);
             i++;
         } else {
             m_src_images1.erase(m_src_images1.begin() + i);
@@ -141,12 +151,14 @@ int StereoCalibration::calcParameters(const std::string paths_file_path, const s
     }
 
     ExtrinsicParams tmp1, tmp2;
-    calibrate(m_int_params1, tmp1, m_corners1, m_object_points, m_src_images1.at(0).size());
-    calibrate(m_int_params2, tmp2, m_corners2, m_object_points, m_src_images2.at(0).size());
+    m_int_params1.resolution = m_src_images1.at(0).size();
+    m_int_params2.resolution = m_src_images2.at(0).size();
+    calibrate(m_int_params1, tmp1, m_corners1, m_object_points, m_int_params1.resolution);
+    calibrate(m_int_params2, tmp2, m_corners2, m_object_points, m_int_params2.resolution);
 
     // 外部パラメータの計算
-    cv::Mat xi = cv::Mat3d(1, 1);
-    cv::Mat t = cv::Mat3d(1, 1);
+    cv::Mat xi = cv::Mat3f(1, 1);
+    cv::Mat t = cv::Mat3f(1, 1);
     for (int i = 0; i < static_cast<int>(N); i++) {
         xi += tmp2.rotation.row(i) - tmp1.rotation.row(i);
         t += tmp2.translation.row(i) - tmp1.translation.row(i);
@@ -155,15 +167,10 @@ int StereoCalibration::calcParameters(const std::string paths_file_path, const s
     t /= static_cast<double>(N);
 
     cv::Rodrigues(xi, m_ext_params.rotation);
-    m_ext_params.translation = t;
-
-    std::cout << "rotation\n"
-              << m_ext_params.rotation.size() << std::endl;
-    std::cout << "translation\n"
-              << m_ext_params.translation.size() << std::endl;
+    m_ext_params.translation = t.reshape(1).t();
 
     showParameters();
-    writeYAML(yaml_path);
+    writeConfig(yaml_path);
 
     return 0;
 }

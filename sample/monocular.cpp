@@ -8,16 +8,16 @@ int main(int argc, char* argv[])
         argc,
         argv,
         "{i input|../data/pseye_00/info.txt| path to paths file for input images.}"
-        "{y yaml|../data/pseye_00/calibration.yaml| path to calibration file.}"
+        "{y yaml|config.yaml| path to config file.}"
         "{d device v video|/dev/video0| path to camera device.}"
         "{m mode|calib|'calib' or 'rectify' or 'read'}"
         "{r row |10|row(行) size of chess board}"
         "{c col |7|col(列) size of chess board}"
         "{s size|19.5|size of each square side on chess board [mm]}"
         "{h help ?|false|Use like below.\n"
-        "$./monocular -m=calib -i=../data/pseye_00/info.txt -y=calibration.yaml -w=10 -c=7 -s=19.5 #calibration by using exsinting image\n"
-        "$./monocular -m=rectify -y=../data/pseye_00/calibration.yaml -d=/dev/video0 #stream rectifyed images \n"
-        "$./monocular -m=read -y=../data/pseye_00/calibration.yaml #read & print calibration data}");
+        "$./monocular -m=calib -i=../data/pseye_00/info.txt -y=config.yaml -w=10 -c=7 -s=19.5 #calibration by using exsinting image\n"
+        "$./monocular -m=rectify -y=../data/pseye_00/config.yaml -d=/dev/video0 #stream rectifyed images \n"
+        "$./monocular -m=read -y=../data/pseye_00/config.yaml #read & print calibration data}");
     if (parser.get<bool>("help")) {
         parser.printMessage();
         return 0;
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     } else if (mode == "rectify") {
         std::string device_path = parser.get<std::string>("device");
         std::string yaml_path = parser.get<std::string>("yaml");
-        calibration.readYAML(yaml_path);
+        calibration.readConfig(yaml_path);
 
         cv::VideoCapture video(device_path);
         if (not video.isOpened()) {
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
         }
     } else if (mode == "read") {
         std::string yaml_path = parser.get<std::string>("yaml");
-        calibration.readYAML(yaml_path);
+        calibration.readConfig(yaml_path);
     } else {
         parser.printMessage();
         std::cout << "invlid arguments" << std::endl;
