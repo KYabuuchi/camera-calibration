@@ -4,7 +4,6 @@
 
 int main(int argc, char* argv[])
 {
-    const std::string dir_name = "images";
     std::string device = "/dev/video0";
     if (argc == 2)
         device = argv[1];
@@ -18,6 +17,7 @@ int main(int argc, char* argv[])
     }
 
     // prepare directory
+    const std::string dir_name = "images";
     std::uintmax_t num = std::filesystem::remove_all(dir_name);
     if (num > 0)
         std::cout << num << " files or directories are Deleted" << std::endl;

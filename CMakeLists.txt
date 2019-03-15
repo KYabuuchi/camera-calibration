@@ -18,8 +18,9 @@ find_package(OpenCV 3.0 REQUIRED)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 file(GLOB CALIBRATION_SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
+add_library(camera-calibration STATIC ${CALIBRATION_SOURCES})
 if(NOT TOPLEVEL)
-    add_library(camera-calibration STATIC ${CALIBRATION_SOURCES})
+
 else()
     # Check C++17
     include(CheckCXXCompilerFlag)
@@ -54,12 +55,19 @@ else()
     message("Build type:\n\t${CMAKE_BUILD_TYPE}")
 
     # =====SAMPLES=====
-    add_executable(monocular sample/monocular.cpp ${CALIBRATION_SOURCES})
-    target_link_libraries(monocular ${OpenCV_LIBS})
+    add_executable(monocular sample/monocular.cpp)
+    target_link_libraries(monocular ${OpenCV_LIBS} camera-calibration)
 
-    add_executable(stereo sample/stereo.cpp ${CALIBRATION_SOURCES})
-    target_link_libraries(stereo ${OpenCV_LIBS})
+    add_executable(stereo sample/stereo.cpp)
+    target_link_libraries(stereo ${OpenCV_LIBS} camera-calibration)
 
     add_executable(record-webcam sample/record_webcam.cpp)
     target_link_libraries(record-webcam ${OpenCV_LIBS} stdc++fs)
+
+    find_library(FREENECT freenect2)
+    message("libfreenect2:\n\t${FREENECT}")
+    if(FREENECT)
+        add_executable(record-kinectv2 sample/record_kinectv2.cpp)
+        target_link_libraries(record-kinectv2 ${OpenCV_LIBS} stdc++fs freenect2)
+    endif()
 endif()
