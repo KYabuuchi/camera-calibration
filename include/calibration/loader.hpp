@@ -1,3 +1,4 @@
+#pragma once
 #include "calibration/params_struct.hpp"
 #include <iostream>
 
@@ -46,22 +47,12 @@ public:
     IntrinsicParams color() { return m_int_params1; }
     IntrinsicParams depth() { return m_int_params2; }
     IntrinsicParams ir() { return m_int_params2; }
-
     ExtrinsicParams extrinsic() { return m_ext_params; }
 
     // extrinsic parameter
-    cv::Mat1f R() { return cv::Mat1f(m_ext_params.rotation); }
-    cv::Mat1f t() { return cv::Mat1f(m_ext_params.translation); }
-    cv::Mat1f T()
-    {
-        cv::Mat1f T(cv::Mat1f::eye(4, 4));
-        if (m_ext_params.rotation.empty() or m_ext_params.translation.empty())
-            return cv::Mat();
-
-        R().copyTo(T.colRange(0, 3).rowRange(0, 3));
-        t().copyTo(T.col(3).rowRange(0, 3));
-        return T;
-    }
+    cv::Mat1f R() { return m_ext_params.R(); }
+    cv::Mat1f t() { return m_ext_params.t(); }
+    cv::Mat1f T() { return m_ext_params.T(); }
 
     // alias
     cv::Mat1f rotation() { return R(); }
@@ -69,18 +60,9 @@ public:
     cv::Mat1f pose() { return T(); }
 
     // inverse
-    cv::Mat1f invR() { return cv::Mat1f(m_ext_params.rotation.t()); }
-    cv::Mat1f invt() { return cv::Mat1f(-m_ext_params.translation); }
-    cv::Mat1f invT()
-    {
-        cv::Mat1f inv_T(cv::Mat1f::eye(4, 4));
-        if (m_ext_params.rotation.empty() or m_ext_params.translation.empty())
-            return cv::Mat();
-        invR().copyTo(inv_T.colRange(0, 3).rowRange(0, 3));
-        invt().copyTo(inv_T.col(3).rowRange(0, 3));
-        return inv_T;
-    }
-
+    cv::Mat1f invR() { return m_ext_params.invt(); }
+    cv::Mat1f invt() { return m_ext_params.invt(); }
+    cv::Mat1f invT() { return m_ext_params.invT(); }
 
 private:
     IntrinsicParams m_int_params;
