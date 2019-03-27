@@ -150,18 +150,17 @@ int StereoCalibration::calcParameters(const std::string paths_file_path, const s
         m_object_points.push_back(objects_tmp);
     }
 
-    ExtrinsicParams tmp1, tmp2;
     m_int_params1.resolution = m_src_images1.at(0).size();
     m_int_params2.resolution = m_src_images2.at(0).size();
-    calibrate(m_int_params1, tmp1, m_corners1, m_object_points, m_int_params1.resolution);
-    calibrate(m_int_params2, tmp2, m_corners2, m_object_points, m_int_params2.resolution);
+    std::pair<cv::Mat, cv::Mat> Rt1 = calibrate(m_int_params1, m_corners1, m_object_points, m_int_params1.resolution);
+    std::pair<cv::Mat, cv::Mat> Rt2 = calibrate(m_int_params2, m_corners2, m_object_points, m_int_params2.resolution);
 
     // 外部パラメータの計算
     cv::Mat xi = cv::Mat3f(1, 1);
     cv::Mat t = cv::Mat3f(1, 1);
     for (int i = 0; i < static_cast<int>(N); i++) {
-        xi += tmp2.rotation.row(i) - tmp1.rotation.row(i);
-        t += tmp2.translation.row(i) - tmp1.translation.row(i);
+        xi += Rt2.first.row(i) - Rt1.first.row(i);
+        t += Rt2.second.row(i) - Rt1.second.row(i);
     }
     xi /= static_cast<double>(N);
     t /= static_cast<double>(N);

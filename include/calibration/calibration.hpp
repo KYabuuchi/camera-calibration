@@ -25,7 +25,8 @@ protected:
 
     bool foundCorners(const cv::Mat& img, std::vector<cv::Point2f>& corners);
     void readImages(const std::vector<std::string>& file_paths, std::vector<cv::Mat>& src_images);
-    void calibrate(IntrinsicParams& int_params, ExtrinsicParams& ext_params, const vv_point2f& corners, const vv_point3f& points, const cv::Size& size);
+    std::pair<cv::Mat, cv::Mat> calibrate(IntrinsicParams& int_params, const vv_point2f& corners, const vv_point3f& points, const cv::Size& size);
+
     std::string directorize(std::string file_path);
     virtual void init() = 0;
 };

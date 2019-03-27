@@ -109,9 +109,8 @@ int MonocularCalibration::calcParameters(const std::string paths_file_path, cons
         m_object_points.push_back(objects_tmp);
     }
 
-    ExtrinsicParams tmp;
     m_int_params.resolution = m_src_images.at(0).size();
-    calibrate(m_int_params, tmp, m_corners, m_object_points, m_int_params.resolution);
+    calibrate(m_int_params, m_corners, m_object_points, m_int_params.resolution);
 
     showParameters();
 
@@ -119,6 +118,5 @@ int MonocularCalibration::calcParameters(const std::string paths_file_path, cons
 
     return 0;
 }
-
 
 }  // namespace Calibration

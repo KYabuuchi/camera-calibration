@@ -48,7 +48,7 @@ void AbstCalibration::readImages(const std::vector<std::string>& file_paths, std
     std::cout << " found " << src_images.size() << " images " << std::endl;
 }
 
-void AbstCalibration::calibrate(IntrinsicParams& int_params, ExtrinsicParams& ext_params, const vv_point2f& corners, const vv_point3f& points, const cv::Size& size)
+std::pair<cv::Mat, cv::Mat> AbstCalibration::calibrate(IntrinsicParams& int_params, const vv_point2f& corners, const vv_point3f& points, const cv::Size& size)
 {
     cv::Mat tmp_intrinsic, tmp_distortion;
     cv::Mat tmp_rotation, tmp_translation;
@@ -67,8 +67,9 @@ void AbstCalibration::calibrate(IntrinsicParams& int_params, ExtrinsicParams& ex
 
     tmp_intrinsic.convertTo(int_params.intrinsic, CV_32FC1);
     tmp_distortion.convertTo(int_params.distortion, CV_32FC1);
-    tmp_rotation.convertTo(ext_params.rotation, CV_32FC3);
-    tmp_translation.convertTo(ext_params.translation, CV_32FC3);
+    tmp_rotation.convertTo(tmp_rotation, CV_32FC3);
+    tmp_translation.convertTo(tmp_translation, CV_32FC3);
+    return {tmp_rotation, tmp_translation};
 }
 
 std::string AbstCalibration::directorize(std::string file_path)
