@@ -40,29 +40,29 @@ public:
         return true;
     }
 
-    IntrinsicParams monocular() { return m_int_params; }
-    IntrinsicParams stereoLeft() { return m_int_params1; }
-    IntrinsicParams stereoRight() { return m_int_params2; }
-    IntrinsicParams rgb() { return m_int_params1; }
-    IntrinsicParams color() { return m_int_params1; }
-    IntrinsicParams depth() { return m_int_params2; }
-    IntrinsicParams ir() { return m_int_params2; }
-    ExtrinsicParams extrinsic() { return m_ext_params; }
+    IntrinsicParams monocular() const { return m_int_params; }
+    IntrinsicParams stereoLeft() const { return m_int_params1; }
+    IntrinsicParams stereoRight() const { return m_int_params2; }
+    IntrinsicParams rgb() const { return m_int_params1; }
+    IntrinsicParams color() const { return m_int_params1; }
+    IntrinsicParams depth() const { return m_int_params2; }
+    IntrinsicParams ir() const { return m_int_params2; }
+    ExtrinsicParams extrinsic() const { return m_ext_params; }
 
     // extrinsic parameter
-    cv::Mat1f R() { return m_ext_params.R(); }
-    cv::Mat1f t() { return m_ext_params.t(); }
-    cv::Mat1f T() { return m_ext_params.T(); }
+    cv::Mat1f R() const { return m_ext_params.R(); }
+    cv::Mat1f t() const { return m_ext_params.t(); }
+    cv::Mat1f T() const { return m_ext_params.T(); }
 
     // alias
-    cv::Mat1f rotation() { return R(); }
-    cv::Mat1f translation() { return t(); }
-    cv::Mat1f pose() { return T(); }
+    cv::Mat1f rotation() const { return R(); }
+    cv::Mat1f translation() const { return t(); }
+    cv::Mat1f pose() const { return T(); }
 
     // inverse
-    cv::Mat1f invR() { return m_ext_params.invt(); }
-    cv::Mat1f invt() { return m_ext_params.invt(); }
-    cv::Mat1f invT() { return m_ext_params.invT(); }
+    cv::Mat1f invR() const { return m_ext_params.invt(); }
+    cv::Mat1f invt() const { return m_ext_params.invt(); }
+    cv::Mat1f invT() const { return m_ext_params.invT(); }
 
 private:
     IntrinsicParams m_int_params;

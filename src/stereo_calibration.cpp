@@ -22,10 +22,12 @@ void StereoCalibration::showParameters() const
         << "\ndistortion1\n " << m_int_params1.distortion
         << "\nresolution1\n " << m_int_params1.resolution
         << "\nRMS1\n " << m_int_params1.RMS
+        << "\n"
         << "\nintrinsic2\n " << m_int_params2.intrinsic
         << "\ndistortion2\n " << m_int_params2.distortion
         << "\nresolution2\n " << m_int_params2.resolution
         << "\nRMS2\n " << m_int_params2.RMS
+        << "\n"
         << "\n  rotation\n " << m_ext_params.rotation
         << "\n  translation\n " << m_ext_params.translation
         << std::endl;
