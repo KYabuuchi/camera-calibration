@@ -18,10 +18,10 @@ find_package(OpenCV 3.0 REQUIRED)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 file(GLOB CALIBRATION_SOURCES ${CMAKE_CURRENT_LIST_DIR}/src/*.cpp)
 
+# library
 add_library(camera-calibration STATIC ${CALIBRATION_SOURCES})
-if(NOT TOPLEVEL)
 
-else()
+if(TOPLEVEL)
     # Check C++17
     include(CheckCXXCompilerFlag)
     message("Using C++17")
@@ -73,4 +73,6 @@ else()
         add_executable(record-kinectv2 sample/record_kinectv2.cpp)
         target_link_libraries(record-kinectv2 ${OpenCV_LIBS} stdc++fs freenect2)
     endif()
+    # =====SAMPLES=====
+
 endif()
