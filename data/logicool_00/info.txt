@@ -19,6 +19,3 @@ image_017.png
 image_018.png
 image_019.png
 image_020.png
-image_021.png
-image_022.png
-image_023.png

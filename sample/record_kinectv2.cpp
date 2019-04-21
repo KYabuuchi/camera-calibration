@@ -100,7 +100,7 @@ int main()
             break;
         if (key == 's') {
             std::stringstream ss;
-            ss << std::setfill('0') << std::right << std::setw(3) << frame_count++ << ".png";
+            ss << std::setfill('0') << std::right << std::setw(4) << frame_count++ << ".png";
             cv::imwrite(dir_name + "/ir_" + ss.str(), ir_mat);
             cv::imwrite(dir_name + "/rgb_" + ss.str(), color_mat);
             cv::imwrite(dir_name + "/depth_" + ss.str(), depth_mat);
